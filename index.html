@@ -4,370 +4,724 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Conquistou</title>
-<meta name="description" content="Conquistou: o app da família para combinar tarefas de casa, acompanhar a mesada e comemorar cada conquista. Versão de teste para Android.">
-<meta property="og:title" content="Conquistou (versão de teste)">
-<meta property="og:description" content="Tarefas de casa que viram conquistas. Baixe a versão de teste para Android.">
+<meta name="description" content="Conquistou: seu filho aprende a conquistar desde pequeno. Tarefas que valem dinheiro, mesada que ele administra, metas que viram presentes. Versão de teste para Android.">
+<meta property="og:title" content="Conquistou: seu filho aprende a conquistar desde pequeno">
+<meta property="og:description" content="Tarefas que valem dinheiro, mesada que ele administra e metas que viram presentes. Baixe a versão de teste para Android.">
 <meta property="og:image" content="https://bandspec.github.io/conquistou/img/compartilhar.jpg">
 <meta property="og:type" content="website">
-<meta name="theme-color" content="#2F66FF">
+<meta name="theme-color" content="#0E1236">
 <link rel="icon" type="image/png" href="img/favicon.png">
 <link rel="apple-touch-icon" href="img/icone-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap">
 <style>
-/* Layout: uma coluna estreita de leitura; o topo divide texto e personagens, o resto empilha. */
+/* Layout: faixa escura e colorida no topo (o "palco"), depois seções claras alternadas com
+   telinhas de exemplo ao lado do texto; tudo vira uma coluna no celular. */
 :root {
-  --bg: #F6F9FF;
-  --bg-alt: #EAF0FC;
+  --bg: #F7F8FF;
+  --bg-alt: #EEF1FF;
   --card: #FFFFFF;
-  --line: #DCE4F5;
-  --ink: #111633;
-  --muted: #4A5270;
+  --line: #E1E6F7;
+  --ink: #12163A;
+  --muted: #4E5677;
+  --palco: #0E1236;
+  --palco-2: #1A1F5C;
   --azul: #2F66FF;
-  --azul-forte: #1B3FC4;
   --roxo: #7A4DF5;
+  --rosa: #FF4FA0;
   --ouro: #FFB020;
+  --verde: #18B663;
+  --ceu: #22B8F0;
+  --azul-txt: #1B3FC4;
+  --roxo-txt: #5A2FD6;
+  --rosa-txt: #C2246F;
+  --verde-txt: #0E7A43;
+  --ouro-txt: #8A5A00;
   --aviso-fundo: #FFF4DB;
   --aviso-borda: #F2C46A;
   --aviso-texto: #6B4A00;
-  --sombra: 0 10px 30px rgba(27, 63, 196, 0.10);
+  --sombra: 0 18px 40px rgba(30, 40, 120, 0.12);
   --titulo: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
   --corpo: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #0D1130;
-    --bg-alt: #141A42;
-    --card: #182050;
-    --line: #2A3470;
-    --ink: #EEF2FF;
-    --muted: #AAB3D6;
-    --azul: #6B93FF;
-    --azul-forte: #8EAEFF;
-    --roxo: #A98BFF;
-    --ouro: #FFC34D;
+    --bg: #0B0F2C;
+    --bg-alt: #11173D;
+    --card: #182052;
+    --line: #29336F;
+    --ink: #F0F3FF;
+    --muted: #AEB6DA;
+    --palco: #070A22;
+    --palco-2: #141A52;
+    --azul-txt: #8EAEFF;
+    --roxo-txt: #B79BFF;
+    --rosa-txt: #FF8CC2;
+    --verde-txt: #5CE09A;
+    --ouro-txt: #FFCB66;
     --aviso-fundo: #3A2C08;
     --aviso-borda: #7A5A12;
     --aviso-texto: #FFE2A3;
-    --sombra: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --sombra: 0 18px 40px rgba(0, 0, 0, 0.4);
     color-scheme: dark;
   }
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--ink);
-  font: 400 1.0625rem/1.65 var(--corpo);
-}
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.0625rem/1.65 var(--corpo); overflow-x: hidden; }
 img { max-width: 100%; height: auto; display: block; }
-a { color: var(--azul-forte); }
-:focus-visible { outline: 3px solid var(--roxo); outline-offset: 3px; border-radius: 6px; }
-
-.faixa-teste {
-  background: var(--ouro);
-  color: #2B1D00;
-  text-align: center;
-  font-weight: 700;
-  font-size: 0.9375rem;
-  padding-block: 10px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-}
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--ouro); outline-offset: 3px; border-radius: 8px; }
+h1, h2, h3 { text-wrap: balance; }
 
 .envoltorio {
-  max-width: 1040px;
+  max-width: 1120px;
   margin: 0 auto;
   padding-left: max(20px, env(safe-area-inset-left, 0px));
   padding-right: max(20px, env(safe-area-inset-right, 0px));
 }
 
-header.topo .envoltorio {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-block: 18px;
-}
-.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
-.marca img { width: 40px; height: 40px; border-radius: 11px; }
-.marca span { font: 800 1.5rem/1 var(--titulo); letter-spacing: -0.01em; }
-.selo {
-  font-size: 0.75rem;
+/* ---------- aviso de teste ---------- */
+.faixa-teste {
+  background: var(--ouro);
+  color: #2B1D00;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--aviso-texto);
-  background: var(--aviso-fundo);
-  border: 1px solid var(--aviso-borda);
-  padding: 4px 10px;
-  border-radius: 999px;
-  white-space: nowrap;
+  font-size: 0.9375rem;
+  text-align: center;
+  padding-block: 9px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
+.faixa-teste a { text-decoration: underline; }
 
-.heroi .envoltorio {
-  display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
-  align-items: center;
-  gap: 40px;
-  padding-block: 28px 56px;
-}
-.heroi h1 {
-  font: 800 clamp(2.4rem, 6vw, 3.75rem)/1.02 var(--titulo);
-  letter-spacing: -0.02em;
-  margin: 0 0 16px;
-  text-wrap: balance;
-}
-.heroi h1 em { font-style: normal; color: var(--roxo); }
-.heroi p.lead { font-size: 1.1875rem; color: var(--muted); margin: 0 0 28px; max-width: 34em; }
-.heroi .personagens { width: 100%; max-width: 380px; justify-self: center; filter: drop-shadow(0 18px 30px rgba(27, 63, 196, 0.18)); }
-
-.baixar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
-.botao {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--azul);
+/* ---------- palco (topo escuro) ---------- */
+.palco {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--palco);
   color: #fff;
-  text-decoration: none;
-  font: 700 1.0625rem/1 var(--corpo);
-  padding: 16px 24px;
-  border-radius: 14px;
-  box-shadow: 0 8px 20px rgba(47, 102, 255, 0.35);
+}
+.palco::before, .palco::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+}
+.palco::before { width: 520px; height: 520px; background: var(--roxo); top: -160px; left: -140px; }
+.palco::after { width: 460px; height: 460px; background: var(--azul); bottom: -200px; right: -80px; }
+.palco .brilho-rosa, .palco .brilho-ouro { position: absolute; z-index: -1; border-radius: 50%; filter: blur(80px); opacity: 0.45; }
+.palco .brilho-rosa { width: 300px; height: 300px; background: var(--rosa); top: 40%; left: 42%; }
+.palco .brilho-ouro { width: 220px; height: 220px; background: var(--ouro); top: 8%; right: 10%; opacity: 0.3; }
+
+.topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 20px; }
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+.marca img { width: 42px; height: 42px; border-radius: 12px; box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+.marca span { font: 800 1.6rem/1 var(--titulo); letter-spacing: -0.01em; }
+.topo nav { display: flex; align-items: center; gap: 22px; font-weight: 600; font-size: 0.9375rem; }
+.topo nav a { text-decoration: none; opacity: 0.85; }
+.topo nav a:hover { opacity: 1; }
+.topo nav .pilula { background: #fff; color: var(--palco); opacity: 1; padding: 9px 16px; border-radius: 999px; font-weight: 800; }
+
+.heroi { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); align-items: center; gap: 40px; padding-block: 36px 84px; }
+.etiqueta {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 0.8125rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.22);
+  padding: 6px 12px; border-radius: 999px; margin-bottom: 18px;
+}
+.etiqueta i { width: 8px; height: 8px; border-radius: 50%; background: var(--ouro); box-shadow: 0 0 0 4px rgba(255,176,32,0.25); }
+.heroi h1 { font: 800 clamp(2.6rem, 6.4vw, 4.5rem)/0.98 var(--titulo); letter-spacing: -0.025em; margin: 0 0 20px; }
+.heroi h1 .grad {
+  background: linear-gradient(90deg, var(--ouro), var(--rosa) 55%, #B69CFF);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.heroi .lead { font-size: 1.1875rem; line-height: 1.6; color: rgba(255,255,255,0.82); margin: 0 0 30px; max-width: 33em; }
+
+.acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.botao {
+  display: inline-flex; align-items: center; gap: 10px;
+  text-decoration: none; font: 800 1.0625rem/1 var(--corpo);
+  padding: 17px 26px; border-radius: 16px;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.botao:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(47, 102, 255, 0.42); }
 .botao svg { width: 22px; height: 22px; flex: none; }
-.baixar .detalhe { font-size: 0.875rem; color: var(--muted); line-height: 1.45; }
+.botao.principal { background: var(--ouro); color: #2B1D00; box-shadow: 0 10px 28px rgba(255,176,32,0.45); }
+.botao.principal:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(255,176,32,0.55); }
+.botao.secundario { color: #fff; border: 1.5px solid rgba(255,255,255,0.35); }
+.botao.secundario:hover { background: rgba(255,255,255,0.08); }
+.heroi .letra-miuda { margin-top: 14px; font-size: 0.875rem; color: rgba(255,255,255,0.7); }
 
+.cena { position: relative; min-height: 440px; }
+.cena .personagens { width: 82%; max-width: 380px; margin: 0 auto; filter: drop-shadow(0 30px 40px rgba(0,0,0,0.45)); }
+.flutua {
+  position: absolute;
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; color: #12163A;
+  border-radius: 16px; padding: 10px 14px 10px 10px;
+  box-shadow: 0 16px 34px rgba(0,0,0,0.3);
+  font-size: 0.875rem; line-height: 1.25;
+  animation: boiar 6s ease-in-out infinite;
+}
+.flutua b { display: block; font-weight: 800; }
+.flutua small { color: #59607F; font-size: 0.8rem; }
+.flutua .bola { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: #fff; flex: none; }
+.flutua .bola svg { width: 20px; height: 20px; }
+.f1 { top: 6%; left: -2%; }
+.f2 { top: 46%; right: -4%; animation-delay: -2s; }
+.f3 { bottom: 2%; left: 4%; animation-delay: -4s; }
+.mini-barra { width: 120px; height: 7px; border-radius: 9px; background: #E9ECF8; margin-top: 5px; overflow: hidden; }
+.mini-barra span { display: block; height: 100%; width: 72%; border-radius: 9px; background: linear-gradient(90deg, var(--rosa), var(--roxo)); }
+@keyframes boiar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+/* ---------- manifesto ---------- */
+.manifesto { padding-block: 84px 72px; }
+.manifesto .kicker { font-size: 0.8125rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--rosa-txt); margin: 0 0 12px; }
+.manifesto h2 { font: 800 clamp(2rem, 4.6vw, 3.25rem)/1.05 var(--titulo); letter-spacing: -0.02em; margin: 0 0 18px; max-width: 18em; }
+.manifesto > .envoltorio > p { font-size: 1.1875rem; color: var(--muted); max-width: 40em; margin: 0 0 40px; }
+.antes-agora { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.antes-agora > div { border-radius: 24px; padding: 28px; min-width: 0; }
+.antes-agora h3 { font: 800 1.375rem/1.2 var(--titulo); margin: 0 0 14px; }
+.antes-agora ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.antes-agora li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; }
+.antes-agora li svg { width: 22px; height: 22px; margin-top: 2px; }
+.antes { background: var(--card); border: 1px solid var(--line); color: var(--muted); }
+.antes h3 { color: var(--ink); }
+.antes svg { color: #9AA1BE; }
+.agora { background: linear-gradient(135deg, var(--azul), var(--roxo) 60%, var(--rosa)); color: #fff; box-shadow: 0 20px 44px rgba(122,77,245,0.35); }
+.agora svg { color: var(--ouro); }
+
+/* ---------- ciclo ---------- */
+.ciclo { background: var(--bg-alt); padding-block: 72px; }
+.ciclo h2, .bloco h2, .faq h2 { font: 800 clamp(1.9rem, 4vw, 2.75rem)/1.08 var(--titulo); letter-spacing: -0.02em; margin: 0 0 10px; }
+.ciclo .intro { color: var(--muted); margin: 0 0 36px; max-width: 38em; }
+.trilha { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; position: relative; }
+.trilha li {
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+  padding: 20px 18px; box-shadow: var(--sombra); min-width: 0; position: relative;
+}
+.trilha .num { font: 800 0.8125rem/1 var(--corpo); letter-spacing: 0.08em; color: var(--muted); }
+.trilha .icone { width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center; color: #fff; margin: 12px 0 14px; }
+.trilha .icone svg { width: 24px; height: 24px; }
+.trilha h3 { font: 800 1.1875rem/1.2 var(--titulo); margin: 0 0 4px; }
+.trilha p { margin: 0; font-size: 0.9375rem; color: var(--muted); line-height: 1.5; }
+.c-azul { background: var(--azul); } .c-roxo { background: var(--roxo); } .c-rosa { background: var(--rosa); }
+.c-ouro { background: var(--ouro); color: #2B1D00 !important; } .c-verde { background: var(--verde); } .c-ceu { background: var(--ceu); }
+
+/* ---------- blocos de recurso ---------- */
+.bloco { padding-block: 80px; }
+.bloco + .bloco { padding-top: 0; }
+.bloco .envoltorio { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: center; }
+.bloco.inverte .texto { order: 2; }
+.bloco .chapeu { display: inline-block; font-size: 0.8125rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; margin-bottom: 14px; }
+.bloco p { color: var(--muted); margin: 0 0 14px; }
+.bloco ul { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.bloco ul li { display: grid; grid-template-columns: 24px 1fr; gap: 10px; }
+.bloco ul li svg { width: 22px; height: 22px; margin-top: 3px; }
+.ch-azul { background: rgba(47,102,255,0.13); color: var(--azul-txt); }
+.ch-verde { background: rgba(24,182,99,0.14); color: var(--verde-txt); }
+.ch-rosa { background: rgba(255,79,160,0.14); color: var(--rosa-txt); }
+.ch-roxo { background: rgba(122,77,245,0.14); color: var(--roxo-txt); }
+.ch-ouro { background: rgba(255,176,32,0.18); color: var(--ouro-txt); }
+
+/* telinhas */
+.vitrine { position: relative; padding: 28px; border-radius: 32px; min-width: 0; }
+.v-azul { background: linear-gradient(150deg, #DDE6FF, #EDE6FF); }
+.v-verde { background: linear-gradient(150deg, #D9F7E6, #DDF0FF); }
+.v-rosa { background: linear-gradient(150deg, #FFE0EF, #EDE6FF); }
+.v-roxo { background: linear-gradient(150deg, #E8E0FF, #FFE8F3); }
+.v-ouro { background: linear-gradient(150deg, #FFF0CC, #FFE0EF); }
+@media (prefers-color-scheme: dark) {
+  .v-azul { background: linear-gradient(150deg, #1B2A6E, #2B1E66); }
+  .v-verde { background: linear-gradient(150deg, #10443A, #173263); }
+  .v-rosa { background: linear-gradient(150deg, #4E1A3C, #2B1E66); }
+  .v-roxo { background: linear-gradient(150deg, #2E1F6E, #4A1A3C); }
+  .v-ouro { background: linear-gradient(150deg, #4A3708, #4A1A3C); }
+}
+.tela {
+  background: #fff; color: #12163A;
+  border-radius: 24px; padding: 18px;
+  box-shadow: 0 24px 50px rgba(20, 24, 80, 0.18);
+  max-width: 380px; margin: 0 auto;
+  font-size: 0.9375rem; line-height: 1.4;
+  display: grid; gap: 12px;
+}
+.tela .cab { display: flex; justify-content: space-between; align-items: center; font-weight: 800; }
+.tela .cab small { font-weight: 600; color: #6B7392; }
+.linha { display: flex; align-items: center; gap: 12px; border: 1px solid #E8ECF8; border-radius: 16px; padding: 12px; }
+.linha .ic { width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff; flex: none; }
+.linha .ic svg { width: 22px; height: 22px; }
+.linha .meio { flex: 1; min-width: 0; }
+.linha .meio b { display: block; font-weight: 800; }
+.linha .meio small { color: #6B7392; }
+.valor { font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.verde-v { color: #0E7A43; } .vermelho-v { color: #C0262D; }
+.status { font-size: 0.75rem; font-weight: 800; padding: 4px 9px; border-radius: 999px; white-space: nowrap; }
+.st-ok { background: #DCF7E8; color: #0E7A43; } .st-esp { background: #FFF1D6; color: #8A5A00; } .st-novo { background: #E3EAFF; color: #1B3FC4; }
+.saldo { border-radius: 18px; padding: 16px; color: #fff; background: linear-gradient(135deg, var(--azul), var(--roxo)); }
+.saldo small { opacity: 0.85; font-weight: 600; }
+.saldo .grande { font: 800 2rem/1.1 var(--titulo); font-variant-numeric: tabular-nums; }
+.saldo .partes { display: flex; gap: 18px; margin-top: 8px; font-size: 0.875rem; }
+.saldo .partes b { display: block; font-size: 1rem; }
+.btn-tela { text-align: center; font-weight: 800; padding: 13px; border-radius: 14px; background: var(--ouro); color: #2B1D00; }
+.barra { height: 12px; border-radius: 9px; background: #EEF0F8; overflow: hidden; }
+.barra span { display: block; height: 100%; border-radius: 9px; }
+.meta-foto { height: 128px; border-radius: 16px; background: linear-gradient(135deg, #FFB3D4, #B9A2FF); display: grid; place-items: center; color: #fff; }
+.meta-foto svg { width: 64px; height: 64px; }
+.festa { text-align: center; font-weight: 800; color: #0E7A43; background: #DCF7E8; border-radius: 14px; padding: 10px; }
+.regra { border: 1.5px dashed #C9D1EC; border-radius: 16px; padding: 12px 14px; }
+.regra b { font-weight: 800; }
+
+.breve { position: relative; }
+.selo-breve {
+  position: absolute; top: 18px; right: 18px; z-index: 1;
+  background: var(--ink); color: var(--bg);
+  font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 6px 12px; border-radius: 999px;
+}
+.relogio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.relogio div { border-radius: 14px; padding: 12px 8px; text-align: center; background: #F3F5FC; }
+.relogio b { display: block; font: 800 1.375rem/1.1 var(--titulo); }
+.relogio small { color: #6B7392; font-size: 0.75rem; }
+
+/* ---------- para cada idade ---------- */
+.idades { background: var(--bg-alt); padding-block: 72px; }
+.idades .grade { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-top: 32px; }
+.idades .grade > div { background: var(--card); border: 1px solid var(--line); border-radius: 22px; padding: 24px; min-width: 0; }
+.idades h2 { font: 800 clamp(1.9rem, 4vw, 2.75rem)/1.08 var(--titulo); letter-spacing: -0.02em; margin: 0; }
+.idades h3 { font: 800 1.25rem/1.2 var(--titulo); margin: 12px 0 6px; }
+.idades p { margin: 0; color: var(--muted); font-size: 0.9875rem; }
+.idades .ic-q { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: #fff; }
+.idades .ic-q svg { width: 24px; height: 24px; }
+
+/* ---------- download ---------- */
+.baixar { padding-block: 84px; }
+.cartaz {
+  position: relative; isolation: isolate; overflow: hidden;
+  background: var(--palco); color: #fff; border-radius: 32px;
+  padding: 48px; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 40px;
+}
+.cartaz::before { content: ""; position: absolute; z-index: -1; width: 420px; height: 420px; border-radius: 50%; background: var(--roxo); filter: blur(80px); opacity: 0.5; top: -160px; right: -120px; }
+.cartaz::after { content: ""; position: absolute; z-index: -1; width: 320px; height: 320px; border-radius: 50%; background: var(--rosa); filter: blur(80px); opacity: 0.35; bottom: -160px; left: 10%; }
+.cartaz h2 { font: 800 clamp(2rem, 4.4vw, 3rem)/1.02 var(--titulo); letter-spacing: -0.02em; margin: 0 0 14px; }
+.cartaz p { color: rgba(255,255,255,0.82); margin: 0 0 24px; }
+.cartaz .letra-miuda { font-size: 0.875rem; color: rgba(255,255,255,0.7); margin-top: 14px; }
 .aviso {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 14px;
-  margin-top: 28px;
-  background: var(--aviso-fundo);
-  border: 1px solid var(--aviso-borda);
-  color: var(--aviso-texto);
-  border-radius: 16px;
-  padding: 16px 18px;
-  max-width: 560px;
+  display: grid; grid-template-columns: auto 1fr; gap: 12px;
+  background: var(--aviso-fundo); border: 1px solid var(--aviso-borda); color: var(--aviso-texto);
+  border-radius: 18px; padding: 16px 18px; margin-top: 22px;
 }
 .aviso svg { width: 24px; height: 24px; margin-top: 2px; }
-.aviso strong { display: block; font-size: 1rem; margin-bottom: 2px; }
-.aviso p { margin: 0; font-size: 0.9375rem; line-height: 1.55; }
+.aviso strong { display: block; margin-bottom: 2px; }
+.aviso p { margin: 0; color: inherit; font-size: 0.9375rem; line-height: 1.55; }
+.passos-inst { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.16); border-radius: 22px; padding: 24px 24px 24px 22px; align-self: start; }
+.passos-inst h3 { font: 800 1.25rem/1.2 var(--titulo); margin: 0 0 12px; }
+.passos-inst ol { margin: 0; padding-left: 1.3em; display: grid; gap: 10px; font-size: 0.9875rem; color: rgba(255,255,255,0.88); }
+.passos-inst li::marker { color: var(--ouro); font-weight: 800; }
 
-section { padding-block: 56px; }
-section.alt { background: var(--bg-alt); }
-h2 {
-  font: 800 clamp(1.75rem, 4vw, 2.375rem)/1.1 var(--titulo);
-  margin: 0 0 10px;
-  text-wrap: balance;
-}
-.intro { color: var(--muted); margin: 0 0 32px; max-width: 40em; }
+/* ---------- perguntas ---------- */
+.faq { padding-block: 0 84px; }
+.faq .lista { display: grid; gap: 12px; margin-top: 26px; max-width: 820px; }
+.faq details { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 4px 20px; }
+.faq summary { cursor: pointer; list-style: none; font-weight: 800; padding-block: 16px; display: flex; justify-content: space-between; gap: 12px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font: 800 1.5rem/1 var(--titulo); color: var(--roxo-txt); transition: transform 0.2s; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { margin: 0 0 18px; color: var(--muted); }
 
-.passos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; counter-reset: passo; }
-.passos li {
-  counter-increment: passo;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 22px 22px 24px;
-  box-shadow: var(--sombra);
-  min-width: 0;
-}
-.passos li::before {
-  content: counter(passo);
-  display: grid;
-  place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: var(--azul);
-  color: #fff;
-  font: 800 1.25rem/1 var(--titulo);
-  margin-bottom: 14px;
-}
-.passos li:nth-child(2)::before { background: var(--roxo); }
-.passos li:nth-child(3)::before { background: var(--ouro); color: #2B1D00; }
-.passos h3, .recursos h3 { font: 700 1.25rem/1.25 var(--titulo); margin: 0 0 6px; }
-.passos p, .recursos p { margin: 0; color: var(--muted); font-size: 0.9875rem; }
-.exemplo {
-  display: inline-block;
-  margin-top: 12px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--ink);
-  background: var(--bg-alt);
-  border-radius: 8px;
-  padding: 4px 10px;
-  font-variant-numeric: tabular-nums;
-}
-
-.recursos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
-.recursos > div { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; min-width: 0; }
-.recursos .icone {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  background: var(--card);
-  border: 1px solid var(--line);
-  color: var(--azul);
-}
-.recursos .icone svg { width: 22px; height: 22px; }
-
-.instalar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: start; }
-.instalar ol { margin: 0; padding-left: 1.3em; display: grid; gap: 12px; }
-.instalar ol li::marker { font-weight: 800; color: var(--azul); }
-.quadro {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 22px 24px;
-  box-shadow: var(--sombra);
-}
-.quadro h3 { font: 700 1.25rem/1.25 var(--titulo); margin: 0 0 10px; }
-.quadro ul { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; color: var(--muted); font-size: 0.9875rem; }
-
-footer { padding-block: 32px 40px; color: var(--muted); font-size: 0.875rem; }
+footer { border-top: 1px solid var(--line); padding-block: 28px 36px; color: var(--muted); font-size: 0.875rem; }
 footer .envoltorio { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
 
-@media (max-width: 820px) {
-  .heroi .envoltorio { grid-template-columns: 1fr; gap: 8px; padding-block: 12px 44px; }
-  .heroi .personagens { order: -1; max-width: 220px; }
-  .passos, .recursos, .instalar { grid-template-columns: minmax(0, 1fr); }
-  section { padding-block: 44px; }
+/* ---------- responsivo ---------- */
+@media (max-width: 920px) {
+  .trilha { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .trilha li:last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 860px) {
+  .topo nav a:not(.pilula) { display: none; }
+  .heroi { grid-template-columns: minmax(0, 1fr); padding-block: 12px 64px; gap: 24px; }
+  .cena { min-height: 360px; }
+  .cena .personagens { width: 62%; }
+  .antes-agora, .idades .grade { grid-template-columns: minmax(0, 1fr); }
+  .bloco { padding-block: 60px; }
+  .bloco .envoltorio { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .bloco.inverte .texto { order: 0; }
+  .cartaz { grid-template-columns: minmax(0, 1fr); padding: 32px 22px; }
+}
+@media (max-width: 480px) {
+  .trilha { grid-template-columns: minmax(0, 1fr); }
+  .flutua { font-size: 0.8rem; padding: 8px 10px 8px 8px; }
+  .flutua .bola { width: 30px; height: 30px; }
+  .f1 { left: 0; } .f2 { right: 0; } .f3 { left: 0; }
+  .vitrine { padding: 16px; }
+  .botao { width: 100%; justify-content: center; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .botao { transition: none; }
+  html { scroll-behavior: auto; }
+  .flutua { animation: none; }
+  .botao, .faq summary::after { transition: none; }
   .botao:hover { transform: none; }
 }
 </style>
 </head>
 <body>
 
-<div class="faixa-teste" role="note">Versão de teste: o app ainda está sendo testado e pode ter erros.</div>
+<div class="faixa-teste" role="note">Versão de teste: o app ainda está sendo testado e pode ter erros. <a href="#baixar">Saiba mais</a></div>
 
-<header class="topo">
-  <div class="envoltorio">
+<div class="palco">
+  <span class="brilho-rosa" aria-hidden="true"></span>
+  <span class="brilho-ouro" aria-hidden="true"></span>
+  <header class="envoltorio topo">
     <a class="marca" href="./">
-      <img src="img/icone-180.png" alt="" width="40" height="40">
+      <img src="img/icone-180.png" alt="" width="42" height="42">
       <span>Conquistou</span>
     </a>
-    <span class="selo">Em teste</span>
-  </div>
-</header>
+    <nav aria-label="Seções">
+      <a href="#ideia">A ideia</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#perguntas">Perguntas</a>
+      <a class="pilula" href="#baixar">Baixar</a>
+    </nav>
+  </header>
 
-<main>
-  <div class="heroi">
-    <div class="envoltorio">
-      <div>
-        <h1>Tarefas de casa que viram <em>conquistas</em>.</h1>
-        <p class="lead">O Conquistou é o app da família: os responsáveis combinam as tarefas, os filhos mostram que fizeram e cada tarefa aprovada vira mesada na carteira deles.</p>
-
-        <div class="baixar" id="baixar">
-          <a class="botao" href="https://github.com/BandSpec/conquistou/releases/latest/download/Conquistou.apk">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-            Baixar para Android
-          </a>
-          <span class="detalhe">Versão <strong>3.3.1</strong> (teste) · arquivo APK de cerca de 85 MB<br>Só para Android. Ainda não tem versão para iPhone.</span>
-        </div>
-
-        <div class="aviso" role="note">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
-          <div>
-            <strong>O app ainda está em teste</strong>
-            <p>Ele já funciona, mas pode ter erros e mudar bastante entre uma versão e outra. Ainda não está na Play Store: a instalação é feita pelo arquivo, como explicado abaixo. Encontrou um problema? Conte para quem te mandou este link.</p>
-          </div>
-        </div>
+  <div class="envoltorio heroi">
+    <div>
+      <span class="etiqueta"><i></i> Versão de teste para Android</span>
+      <h1>Seu filho aprende a <span class="grad">conquistar</span> desde pequeno.</h1>
+      <p class="lead">Cada tarefa feita vale dinheiro. O dinheiro vira mesada. A mesada vira o presente que ele sonhou. No Conquistou, a criança aprende na prática que esforço tem valor, e você acompanha tudo pelo celular.</p>
+      <div class="acoes">
+        <a class="botao principal" href="https://github.com/BandSpec/conquistou/releases/latest/download/Conquistou.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+          Baixar para Android
+        </a>
+        <a class="botao secundario" href="#como-funciona">Como funciona</a>
       </div>
-      <img class="personagens" src="img/personagens.webp" width="640" height="661" alt="Os dois personagens do Conquistou, um roxo e um azul, comemorando com um troféu">
+      <p class="letra-miuda">Versão 3.3.1 de teste · APK de cerca de 85 MB · ainda não tem versão para iPhone</p>
+    </div>
+
+    <div class="cena" aria-hidden="true">
+      <img class="personagens" src="img/personagens.webp" width="640" height="661" alt="">
+      <div class="flutua f1">
+        <span class="bola c-verde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg></span>
+        <span><b>Arrumou a cama</b><small>Aprovado · <strong style="color:#0E7A43">+R$ 2,00</strong></small></span>
+      </div>
+      <div class="flutua f2">
+        <span class="bola c-rosa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v9H4v-9"/><path d="M2 7h20v5H2z"/><path d="M12 21V7"/><path d="M12 7H8a2.5 2.5 0 1 1 0-5c3 0 4 5 4 5Z"/><path d="M12 7h4a2.5 2.5 0 1 0 0-5c-3 0-4 5-4 5Z"/></svg></span>
+        <span><b>Meta: Bicicleta</b><small>R$ 216 de R$ 300</small><span class="mini-barra"><span></span></span></span>
+      </div>
+      <div class="flutua f3">
+        <span class="bola c-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+        <span><b>Lição de casa</b><small>Faltam 30 min para o prazo</small></span>
+      </div>
     </div>
   </div>
+</div>
 
-  <section class="alt" aria-labelledby="como-funciona">
+<main>
+  <section class="manifesto" id="ideia" aria-labelledby="t-ideia">
     <div class="envoltorio">
-      <h2 id="como-funciona">Como funciona</h2>
-      <p class="intro">Três passos, todo dia.</p>
-      <ol class="passos">
+      <p class="kicker">A ideia</p>
+      <h2 id="t-ideia">Estamos mudando o jeito de educar os filhos.</h2>
+      <p>Mesada que cai do céu ensina pouco. Quando a criança faz a parte dela, vê o dinheiro entrar e decide o que fazer com ele, aprende responsabilidade, paciência e o valor das coisas. Tudo isso com pequenas tarefas do dia a dia.</p>
+      <div class="antes-agora">
+        <div class="antes">
+          <h3>Do jeito de sempre</h3>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Lembrar a mesma tarefa todo dia, sem saber se foi feita.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Mesada fixa, que chega igual com ou sem esforço.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Presente que chega pronto, sem a criança participar.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>Castigo decidido na hora, sem regra clara.</li>
+          </ul>
+        </div>
+        <div class="agora">
+          <h3>Com o Conquistou</h3>
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>A tarefa aparece no celular dele, com prazo e lembrete.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Cada tarefa aprovada soma na mesada. Fez mais, ganhou mais.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Ele junta para a meta e conquista o presente com o próprio esforço.</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Regras combinadas antes, que todo mundo conhece.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ciclo" id="como-funciona" aria-labelledby="t-ciclo">
+    <div class="envoltorio">
+      <h2 id="t-ciclo">Da tarefa à conquista</h2>
+      <p class="intro">Um ciclo simples, que a criança entende e repete todo dia.</p>
+      <ol class="trilha">
         <li>
-          <h3>O responsável combina a tarefa</h3>
-          <p>Escolhe o filho, o valor, os dias e o horário. Pode colocar uma foto do "antes" ou um ícone pronto, para quem ainda não sabe ler.</p>
-          <span class="exemplo">Arrumar a cama · R$ 2,00 · todo dia até 12h</span>
+          <span class="num">1</span>
+          <span class="icone c-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg></span>
+          <h3>Tarefa</h3>
+          <p>Você combina o que fazer, quando e quanto vale.</p>
         </li>
         <li>
-          <h3>O filho mostra que fez</h3>
-          <p>Abre o app, vê as tarefas de hoje e envia uma foto, um áudio ou um vídeo como comprovante.</p>
-          <span class="exemplo">Foto da cama arrumada às 9h40</span>
+          <span class="num">2</span>
+          <span class="icone c-roxo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/><circle cx="12" cy="13" r="3.5"/></svg></span>
+          <h3>Comprovante</h3>
+          <p>Ele manda foto, áudio ou vídeo mostrando que fez.</p>
         </li>
         <li>
-          <h3>Aprovou, conquistou</h3>
-          <p>O responsável vê o antes e o depois lado a lado e aprova. O valor entra na hora na carteira do filho.</p>
-          <span class="exemplo">Saldo: R$ 18,00 → R$ 20,00</span>
+          <span class="num">3</span>
+          <span class="icone c-verde"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5a2.5 2 0 0 0-2.5-1.5c-1.4 0-2.5.8-2.5 2s1.1 1.6 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2a2.5 2 0 0 1-2.5-1.5"/><path d="M12 6.5v11"/></svg></span>
+          <h3>Mesada</h3>
+          <p>Você aprova e o valor entra na carteira dele.</p>
+        </li>
+        <li>
+          <span class="num">4</span>
+          <span class="icone c-rosa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
+          <h3>Meta</h3>
+          <p>O dinheiro vai juntando para o presente que ele escolheu.</p>
+        </li>
+        <li>
+          <span class="num">5</span>
+          <span class="icone c-ouro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0Z"/><path d="M17 5h3v2a3 3 0 0 1-3 3"/><path d="M7 5H4v2a3 3 0 0 0 3 3"/></svg></span>
+          <h3>Conquistou!</h3>
+          <p>Meta completa: ele ganha o presente que conquistou.</p>
         </li>
       </ol>
     </div>
   </section>
 
-  <section aria-labelledby="recursos">
+  <section class="bloco" aria-labelledby="t-tarefas">
     <div class="envoltorio">
-      <h2 id="recursos">O que já tem no app</h2>
-      <p class="intro">Feito para famílias com filhos de idades diferentes.</p>
-      <div class="recursos">
-        <div>
-          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="3"/><path d="M16 13h2"/><path d="M2 10h20"/></svg></span>
-          <div><h3>Carteira e extrato</h3><p>Cada filho vê o saldo e tudo o que entrou e saiu, tarefa por tarefa.</p></div>
-        </div>
-        <div>
-          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
-          <div><h3>Metas</h3><p>O filho escolhe algo que quer comprar, coloca a foto e acompanha quanto falta.</p></div>
-        </div>
-        <div>
-          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z"/><path d="M21 14v7h-7"/></svg></span>
-          <div><h3>Mesada via PIX</h3><p>O filho pede a mesada, o app gera o QR Code PIX e o responsável paga pelo banco.</p></div>
-        </div>
-        <div>
-          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10 8h4"/><path d="M10 12h4"/><path d="M11 18h2"/></svg></span>
-          <div><h3>Entrada com PIN para os pequenos</h3><p>Crianças sem e-mail entram só com um PIN, no celular que o responsável configurou. Irmãos podem dividir o mesmo aparelho.</p></div>
-        </div>
-        <div>
-          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
-          <div><h3>Avisos no celular</h3><p>Lembrete antes do prazo para o filho e aviso para o responsável quando tem tarefa para aprovar. Fica em silêncio das 21h às 7h.</p></div>
-        </div>
-        <div>
-          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M5 7h14"/><path d="m5 7-3 7a3 3 0 0 0 6 0Z"/><path d="m19 7-3 7a3 3 0 0 0 6 0Z"/></svg></span>
-          <div><h3>Regras combinadas</h3><p>Desconto manual ou regra automática, como "3 tarefas esquecidas em 7 dias desconta R$ 5".</p></div>
+      <div class="texto">
+        <span class="chapeu ch-azul">Tarefas que valem dinheiro</span>
+        <h2 id="t-tarefas">Pequenas tarefas, grandes conquistas.</h2>
+        <p>Arrumar a cama, fazer a lição, cuidar do pet. Você escolhe o valor de cada tarefa, os dias e o prazo. Ele recebe um lembrete antes do prazo e manda a prova quando termina.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--azul)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Todo dia, em dias da semana certos ou uma vez só.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--azul)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Foto do "antes" ou um dos 17 ícones prontos, para quem ainda não sabe ler.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--azul)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Você vê o antes e o depois lado a lado na hora de aprovar.</li>
+        </ul>
+      </div>
+      <div class="vitrine v-azul" aria-hidden="true">
+        <div class="tela">
+          <div class="cab">Tarefas de hoje <small>terça-feira</small></div>
+          <div class="linha">
+            <span class="ic c-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 17h20"/></svg></span>
+            <span class="meio"><b>Arrumar a cama</b><small>até 12h</small></span>
+            <span class="status st-ok">Aprovada</span>
+          </div>
+          <div class="linha">
+            <span class="ic c-roxo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></span>
+            <span class="meio"><b>Lição de casa</b><small>até 18h</small></span>
+            <span class="status st-esp">Enviada</span>
+          </div>
+          <div class="linha">
+            <span class="ic c-ceu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/></svg></span>
+            <span class="meio"><b>Dar comida ao Thor</b><small>até 20h</small></span>
+            <span class="valor">R$ 1,50</span>
+          </div>
+          <div class="btn-tela">Enviar foto da tarefa</div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="alt" aria-labelledby="instalar">
-    <div class="envoltorio instalar">
-      <div>
-        <h2 id="instalar">Como instalar</h2>
-        <p class="intro">Como o app ainda não está na Play Store, o Android pede uma confirmação a mais.</p>
-        <ol>
-          <li>No celular Android, toque em <a href="#baixar">Baixar para Android</a>.</li>
-          <li>Quando o download terminar, abra o arquivo <strong>Conquistou.apk</strong> (pela notificação ou pela pasta Downloads).</li>
-          <li>Se aparecer "instalação bloqueada", toque em <strong>Configurações</strong> e ative <strong>Permitir desta fonte</strong> para o navegador que você usou.</li>
-          <li>Volte e toque em <strong>Instalar</strong>. Se o Play Protect perguntar, escolha <strong>Instalar mesmo assim</strong>.</li>
-          <li>Abra o Conquistou, crie a conta da família e cadastre os filhos.</li>
-        </ol>
-      </div>
-      <div class="quadro">
-        <h3>Bom saber</h3>
+  <section class="bloco inverte" aria-labelledby="t-mesada">
+    <div class="envoltorio">
+      <div class="texto">
+        <span class="chapeu ch-verde">Mesada que ele administra</span>
+        <h2 id="t-mesada">O dinheiro é dele. A decisão também.</h2>
+        <p>Cada tarefa aprovada soma no saldo. Na carteira ele vê quanto tem livre, quanto está guardado e o extrato de tudo. Quando quiser, escolhe quanto quer sacar e pede a mesada.</p>
         <ul>
-          <li>Precisa de Android. No iPhone o arquivo não abre.</li>
-          <li>Se você tinha o app de teste antigo, chamado <strong>Combinado</strong>, o Conquistou instala por cima e mantém seus dados.</li>
-          <li>Para atualizar, baixe de novo por esta página e instale por cima.</li>
-          <li>Na primeira vez, permita as notificações para receber os avisos de tarefa.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--verde)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>O app gera o QR Code PIX e você paga pelo seu banco.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--verde)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Você define de quanto em quanto tempo ele pode sacar: semanal, quinzenal ou mensal.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--verde)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Ele aprende a planejar: sacar agora ou guardar para algo maior.</li>
         </ul>
+      </div>
+      <div class="vitrine v-verde" aria-hidden="true">
+        <div class="tela">
+          <div class="cab">Carteira <small>Julia</small></div>
+          <div class="saldo">
+            <small>Saldo total</small>
+            <div class="grande">R$ 254,50</div>
+            <div class="partes"><span>Livre<b>R$ 38,50</b></span><span>Guardado nas metas<b>R$ 216,00</b></span></div>
+          </div>
+          <div class="linha">
+            <span class="meio"><b>Arrumar a cama</b><small>hoje, 9h40</small></span>
+            <span class="valor verde-v">+R$ 2,00</span>
+          </div>
+          <div class="linha">
+            <span class="meio"><b>Mesada sacada via PIX</b><small>sexta-feira</small></span>
+            <span class="valor vermelho-v">−R$ 20,00</span>
+          </div>
+          <div class="btn-tela">Pedir mesada</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloco" aria-labelledby="t-metas">
+    <div class="envoltorio">
+      <div class="texto">
+        <span class="chapeu ch-rosa">Metas que viram presentes</span>
+        <h2 id="t-metas">Ele sonha, junta e conquista.</h2>
+        <p>A bicicleta, o videogame, a boneca: ele cria a meta com foto e preço, e o dinheiro das tarefas vai juntando. Quando chega a 100%, você conclui a meta e ele ganha o presente. Conquistou!</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--rosa)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Uma meta por vez, com o dinheiro indo sozinho para ela, ou vários cofrinhos para quem já sabe dividir.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--rosa)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Barra de progresso que mostra quanto falta.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--rosa)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Quer dar uma força? Complete o que falta como bônus.</li>
+        </ul>
+      </div>
+      <div class="vitrine v-rosa" aria-hidden="true">
+        <div class="tela">
+          <div class="cab">Minha meta <small>72%</small></div>
+          <div class="meta-foto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><circle cx="15" cy="5" r="1"/><path d="M12 17.5V14l-3-3 4-3 2 3h2"/></svg></div>
+          <div><b>Bicicleta aro 20</b><br><small style="color:#6B7392">R$ 216,00 de R$ 300,00 · faltam R$ 84,00</small></div>
+          <div class="barra"><span style="width:72%;background:linear-gradient(90deg,var(--rosa),var(--roxo))"></span></div>
+          <div class="festa">Faltam só 42 camas arrumadas!</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloco inverte" aria-labelledby="t-castigos">
+    <div class="envoltorio">
+      <div class="texto">
+        <span class="chapeu ch-roxo">Castigos com regras claras</span>
+        <h2 id="t-castigos">Combinado antes, cobrado sem briga.</h2>
+        <p>Responsabilidade também é saber que esquecer tem consequência. Você pode descontar um valor com o motivo explicado, ou criar regras que todo mundo conhece desde o começo.</p>
+        <ul>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--roxo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Desconto manual, com motivo que aparece no extrato dele.</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--roxo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>Regras como "3 tarefas esquecidas em 7 dias, desconta R$ 5".</li>
+          <li><svg viewBox="0 0 24 24" fill="none" stroke="var(--roxo)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 5 5L20 7"/></svg>A mesma falta nunca é descontada duas vezes.</li>
+        </ul>
+      </div>
+      <div class="vitrine v-roxo" aria-hidden="true">
+        <div class="tela">
+          <div class="cab">Regras da família <small>2 ativas</small></div>
+          <div class="regra"><b>Esqueceu 3 tarefas em 7 dias</b><br><small style="color:#6B7392">desconta R$ 5,00</small></div>
+          <div class="regra"><b>Não fez a lição 2 dias seguidos</b><br><small style="color:#6B7392">desconta R$ 3,00</small></div>
+          <div class="linha">
+            <span class="meio"><b>Desconto: brigou com o irmão</b><small>motivo explicado pelo responsável</small></span>
+            <span class="valor vermelho-v">−R$ 2,00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bloco" aria-labelledby="t-tela">
+    <div class="envoltorio">
+      <div class="texto">
+        <span class="chapeu ch-ouro">Em breve: tempo de tela</span>
+        <h2 id="t-tela">Tempo de tela também se conquista.</h2>
+        <p>Estamos preparando tarefas que valem minutos de tela, além de dinheiro. A criança faz a parte dela, ganha os minutos e escolhe em quais apps e jogos quer usar. Menos discussão na hora de desligar, mais combinado.</p>
+        <p><strong>Ainda não está nesta versão de teste.</strong> Vai chegar numa atualização.</p>
+      </div>
+      <div class="vitrine v-ouro breve" aria-hidden="true">
+        <span class="selo-breve">Em breve</span>
+        <div class="tela">
+          <div class="cab">Tempo de tela <small>hoje</small></div>
+          <div class="relogio">
+            <div><b>45</b><small>min ganhos</small></div>
+            <div><b>20</b><small>min usados</small></div>
+            <div><b>25</b><small>min livres</small></div>
+          </div>
+          <div class="linha">
+            <span class="ic c-ouro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></span>
+            <span class="meio"><b>Ler 20 páginas</b><small>vale tempo de tela</small></span>
+            <span class="valor">+30 min</span>
+          </div>
+          <div class="barra"><span style="width:44%;background:linear-gradient(90deg,var(--ouro),var(--rosa))"></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="idades" aria-labelledby="t-idades">
+    <div class="envoltorio">
+      <h2 id="t-idades">Para cada idade, do jeito certo</h2>
+      <div class="grade">
+        <div>
+          <span class="ic-q c-rosa"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+          <h3>Os pequenos</h3>
+          <p>Entram só com um PIN, sem e-mail nem senha, no celular que você configurou. Irmãos podem dividir o mesmo aparelho.</p>
+        </div>
+        <div>
+          <span class="ic-q c-ceu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/></svg></span>
+          <h3>Os maiores</h3>
+          <p>Adolescentes podem ter conta própria, com e-mail e senha, e administrar os cofrinhos sozinhos.</p>
+        </div>
+        <div>
+          <span class="ic-q c-azul"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+          <h3>Os responsáveis</h3>
+          <p>Pai, mãe ou quem cuida: aprovações, avisos no celular e silêncio das 21h às 7h para ninguém ser incomodado à noite.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="baixar" id="baixar" aria-labelledby="t-baixar">
+    <div class="envoltorio">
+      <div class="cartaz">
+        <div>
+          <h2 id="t-baixar">Comece hoje a primeira conquista.</h2>
+          <p>Baixe a versão de teste, crie a conta da família e combine a primeira tarefa em menos de 5 minutos.</p>
+          <a class="botao principal" href="https://github.com/BandSpec/conquistou/releases/latest/download/Conquistou.apk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Baixar para Android
+          </a>
+          <p class="letra-miuda">Versão 3.3.1 de teste · arquivo Conquistou.apk, cerca de 85 MB</p>
+          <div class="aviso" role="note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <div>
+              <strong>O app ainda está em teste</strong>
+              <p>Ele já funciona, mas pode ter erros e mudar bastante entre uma versão e outra. Ainda não está na Play Store, por isso a instalação é pelo arquivo. Encontrou um problema? Conte para quem te mandou este link.</p>
+            </div>
+          </div>
+        </div>
+        <div class="passos-inst">
+          <h3>Como instalar</h3>
+          <ol>
+            <li>No celular Android, toque em <strong>Baixar para Android</strong>.</li>
+            <li>Abra o arquivo <strong>Conquistou.apk</strong> pela notificação ou pela pasta Downloads.</li>
+            <li>Se aparecer "instalação bloqueada", toque em <strong>Configurações</strong> e ative <strong>Permitir desta fonte</strong>.</li>
+            <li>Toque em <strong>Instalar</strong>. Se o Play Protect perguntar, escolha <strong>Instalar mesmo assim</strong>.</li>
+            <li>Abra o Conquistou, crie a conta da família e permita as notificações.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq" id="perguntas" aria-labelledby="t-faq">
+    <div class="envoltorio">
+      <h2 id="t-faq">Perguntas frequentes</h2>
+      <div class="lista">
+        <details>
+          <summary>O dinheiro do app é de verdade?</summary>
+          <p>O app funciona como a carteira da criança: registra quanto ela ganhou, guardou e gastou. O dinheiro de verdade continua com você. Quando ela pede a mesada, o app gera um PIX e você paga pelo seu banco, no valor que ela escolheu.</p>
+        </details>
+        <details>
+          <summary>A partir de que idade dá para usar?</summary>
+          <p>Desde que a criança consiga entender uma tarefa simples. Para quem ainda não lê, as tarefas podem ter foto ou ícone, e a entrada é só com PIN. Adolescentes podem ter conta própria.</p>
+        </details>
+        <details>
+          <summary>Funciona no iPhone?</summary>
+          <p>Ainda não. A versão de teste é só para Android.</p>
+        </details>
+        <details>
+          <summary>Eu tinha o app de teste antigo, o "Combinado". E agora?</summary>
+          <p>É o mesmo app com nome novo. Instale o Conquistou por cima: ele substitui o antigo e mantém a família, as tarefas e os saldos.</p>
+        </details>
+        <details>
+          <summary>Como atualizo quando sair versão nova?</summary>
+          <p>Volte nesta página, baixe de novo e instale por cima. O botão sempre baixa a versão mais recente.</p>
+        </details>
+        <details>
+          <summary>Quando chega o tempo de tela?</summary>
+          <p>Está em preparação e vai chegar numa próxima atualização. Quando sair, avisamos nesta página.</p>
+        </details>
       </div>
     </div>
   </section>
