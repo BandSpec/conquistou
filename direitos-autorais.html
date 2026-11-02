@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Direitos autorais · Conquistou</title>
+<meta name="description" content="Direitos autorais e uso da marca, do app e do site Conquistou.">
+<meta name="theme-color" content="#0E1236">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Manrope:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: faixa escura curta com o título, depois uma coluna de leitura com as seções do texto. */
+:root {
+  --bg: #F7F8FF;
+  --card: #FFFFFF;
+  --line: #E1E6F7;
+  --ink: #12163A;
+  --muted: #4E5677;
+  --palco: #0E1236;
+  --roxo: #7A4DF5;
+  --azul: #2F66FF;
+  --rosa: #FF4FA0;
+  --link: #1B3FC4;
+  --titulo: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --corpo: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0B0F2C;
+    --card: #182052;
+    --line: #29336F;
+    --ink: #F0F3FF;
+    --muted: #AEB6DA;
+    --palco: #070A22;
+    --link: #8EAEFF;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.0625rem/1.7 var(--corpo); }
+a { color: var(--link); }
+:focus-visible { outline: 3px solid var(--roxo); outline-offset: 3px; border-radius: 6px; }
+.envoltorio {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+
+.palco { position: relative; isolation: isolate; overflow: hidden; background: var(--palco); color: #fff; }
+.palco::before, .palco::after { content: ""; position: absolute; z-index: -1; border-radius: 50%; filter: blur(70px); opacity: 0.5; }
+.palco::before { width: 380px; height: 380px; background: var(--roxo); top: -180px; left: -120px; }
+.palco::after { width: 320px; height: 320px; background: var(--rosa); bottom: -220px; right: -60px; opacity: 0.35; }
+.topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 20px; }
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; }
+.marca img { width: 38px; height: 38px; border-radius: 11px; }
+.marca span { font: 800 1.45rem/1 var(--titulo); }
+.voltar { color: #fff; text-decoration: none; font-weight: 700; font-size: 0.9375rem; opacity: 0.85; }
+.voltar:hover { opacity: 1; }
+.cabeca { padding-block: 24px 48px; }
+.cabeca h1 { font: 800 clamp(2.2rem, 6vw, 3.25rem)/1.02 var(--titulo); letter-spacing: -0.02em; margin: 0 0 10px; }
+.cabeca p { margin: 0; color: rgba(255,255,255,0.78); }
+
+main { padding-block: 44px 64px; }
+.resumo {
+  background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+  padding: 20px 22px; margin-bottom: 36px;
+}
+.resumo strong { font: 800 1.125rem/1.3 var(--titulo); display: block; margin-bottom: 4px; }
+.resumo p { margin: 0; color: var(--muted); }
+h2 { font: 800 1.5rem/1.2 var(--titulo); margin: 36px 0 10px; text-wrap: balance; }
+p, li { color: var(--muted); }
+p { margin: 0 0 12px; }
+ul { margin: 0 0 12px; padding-left: 1.25em; display: grid; gap: 6px; }
+strong { color: var(--ink); }
+.atualizado { font-size: 0.875rem; color: var(--muted); margin-top: 40px; padding-top: 18px; border-top: 1px solid var(--line); }
+
+footer { border-top: 1px solid var(--line); padding-block: 24px 32px; color: var(--muted); font-size: 0.875rem; }
+footer .envoltorio { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+</style>
+</head>
+<body>
+
+<div class="palco">
+  <header class="envoltorio topo">
+    <a class="marca" href="./">
+      <img src="img/icone-180.png" alt="" width="38" height="38">
+      <span>Conquistou</span>
+    </a>
+    <a class="voltar" href="./">← Voltar ao site</a>
+  </header>
+  <div class="envoltorio cabeca">
+    <h1>Direitos autorais</h1>
+    <p>O que é do Conquistou, o que você pode fazer e o que não pode.</p>
+  </div>
+</div>
+
+<main class="envoltorio">
+  <div class="resumo">
+    <strong>Em resumo</strong>
+    <p>© 2026 Rafael Bandeira (BandSpec). Todos os direitos reservados. Você pode baixar e usar o app com a sua família e compartilhar o link deste site. Não pode copiar, modificar ou redistribuir o app, a marca, os personagens ou os textos.</p>
+  </div>
+
+  <h2>Quem é o titular</h2>
+  <p>O aplicativo Conquistou, este site e todo o conteúdo deles pertencem a <strong>Rafael Bandeira</strong>, que publica com o nome <strong>BandSpec</strong>. Isso inclui:</p>
+  <ul>
+    <li>o nome <strong>Conquistou</strong> e o logotipo;</li>
+    <li>os personagens (o roxo e o azul com o troféu), o ícone do app e as ilustrações;</li>
+    <li>o código-fonte do aplicativo e do servidor;</li>
+    <li>as telas, o visual, os textos e as fotos do app e deste site.</li>
+  </ul>
+  <p>Esse conteúdo é protegido pela Lei de Direitos Autorais (Lei nº 9.610/1998) e pela Lei do Software (Lei nº 9.609/1998).</p>
+
+  <h2>O que você pode fazer</h2>
+  <ul>
+    <li>Baixar e instalar o app nos celulares da sua família, para uso pessoal.</li>
+    <li>Compartilhar o link deste site com outras pessoas.</li>
+    <li>Falar do Conquistou e mostrar o app em redes sociais, desde que não pareça que você é o dono ou um parceiro oficial.</li>
+  </ul>
+
+  <h2>O que você não pode fazer sem autorização por escrito</h2>
+  <ul>
+    <li>Copiar, vender ou redistribuir o app ou o arquivo de instalação (APK) por outros sites ou lojas.</li>
+    <li>Modificar o app, fazer engenharia reversa ou tentar extrair o código-fonte.</li>
+    <li>Usar o nome Conquistou, o logotipo ou os personagens em outro produto, site ou perfil.</li>
+    <li>Copiar o visual, as telas ou os textos para criar um app parecido.</li>
+  </ul>
+
+  <h2>O que é seu</h2>
+  <p>As fotos, os áudios, os vídeos e os textos que a sua família coloca no app (comprovantes de tarefa, fotos de metas, nomes) continuam sendo de vocês. O Conquistou usa esse conteúdo só para fazer o app funcionar para a sua família.</p>
+
+  <h2>Componentes de terceiros</h2>
+  <p>O app e o site usam ferramentas de código aberto, cada uma com a sua própria licença, que continua valendo. Entre elas: React Native e Expo (licença MIT), .NET (licença MIT), as fontes Baloo 2 e Manrope (SIL Open Font License) e desenhos de ícones baseados no Lucide (licença ISC).</p>
+
+  <h2>Versão de teste</h2>
+  <p>O Conquistou está em fase de testes. O app é oferecido como está, pode ter erros e pode mudar ou deixar de funcionar sem aviso.</p>
+
+  <h2>Achou uma cópia ou um uso indevido?</h2>
+  <p>Se você encontrar o app, o nome ou os personagens sendo usados por outra pessoa, avise quem te mandou o link deste site.</p>
+
+  <p class="atualizado">Última atualização: 2 de novembro de 2026.</p>
+</main>
+
+<footer>
+  <div class="envoltorio">
+    <span>© 2026 Rafael Bandeira (BandSpec)</span>
+    <a href="./">Voltar ao site</a>
+  </div>
+</footer>
+
+</body>
+</html>
