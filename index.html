@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Conquistou</title>
+<meta name="description" content="Conquistou: o app da família para combinar tarefas de casa, acompanhar a mesada e comemorar cada conquista. Versão de teste para Android.">
+<meta property="og:title" content="Conquistou (versão de teste)">
+<meta property="og:description" content="Tarefas de casa que viram conquistas. Baixe a versão de teste para Android.">
+<meta property="og:image" content="https://bandspec.github.io/conquistou/img/compartilhar.jpg">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#2F66FF">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/icone-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: uma coluna estreita de leitura; o topo divide texto e personagens, o resto empilha. */
+:root {
+  --bg: #F6F9FF;
+  --bg-alt: #EAF0FC;
+  --card: #FFFFFF;
+  --line: #DCE4F5;
+  --ink: #111633;
+  --muted: #4A5270;
+  --azul: #2F66FF;
+  --azul-forte: #1B3FC4;
+  --roxo: #7A4DF5;
+  --ouro: #FFB020;
+  --aviso-fundo: #FFF4DB;
+  --aviso-borda: #F2C46A;
+  --aviso-texto: #6B4A00;
+  --sombra: 0 10px 30px rgba(27, 63, 196, 0.10);
+  --titulo: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --corpo: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0D1130;
+    --bg-alt: #141A42;
+    --card: #182050;
+    --line: #2A3470;
+    --ink: #EEF2FF;
+    --muted: #AAB3D6;
+    --azul: #6B93FF;
+    --azul-forte: #8EAEFF;
+    --roxo: #A98BFF;
+    --ouro: #FFC34D;
+    --aviso-fundo: #3A2C08;
+    --aviso-borda: #7A5A12;
+    --aviso-texto: #FFE2A3;
+    --sombra: 0 10px 30px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1.0625rem/1.65 var(--corpo);
+}
+img { max-width: 100%; height: auto; display: block; }
+a { color: var(--azul-forte); }
+:focus-visible { outline: 3px solid var(--roxo); outline-offset: 3px; border-radius: 6px; }
+
+.faixa-teste {
+  background: var(--ouro);
+  color: #2B1D00;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.envoltorio {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+
+header.topo .envoltorio {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 18px;
+}
+.marca { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.marca img { width: 40px; height: 40px; border-radius: 11px; }
+.marca span { font: 800 1.5rem/1 var(--titulo); letter-spacing: -0.01em; }
+.selo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--aviso-texto);
+  background: var(--aviso-fundo);
+  border: 1px solid var(--aviso-borda);
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.heroi .envoltorio {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 40px;
+  padding-block: 28px 56px;
+}
+.heroi h1 {
+  font: 800 clamp(2.4rem, 6vw, 3.75rem)/1.02 var(--titulo);
+  letter-spacing: -0.02em;
+  margin: 0 0 16px;
+  text-wrap: balance;
+}
+.heroi h1 em { font-style: normal; color: var(--roxo); }
+.heroi p.lead { font-size: 1.1875rem; color: var(--muted); margin: 0 0 28px; max-width: 34em; }
+.heroi .personagens { width: 100%; max-width: 380px; justify-self: center; filter: drop-shadow(0 18px 30px rgba(27, 63, 196, 0.18)); }
+
+.baixar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; }
+.botao {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--azul);
+  color: #fff;
+  text-decoration: none;
+  font: 700 1.0625rem/1 var(--corpo);
+  padding: 16px 24px;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px rgba(47, 102, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.botao:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(47, 102, 255, 0.42); }
+.botao svg { width: 22px; height: 22px; flex: none; }
+.baixar .detalhe { font-size: 0.875rem; color: var(--muted); line-height: 1.45; }
+
+.aviso {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  margin-top: 28px;
+  background: var(--aviso-fundo);
+  border: 1px solid var(--aviso-borda);
+  color: var(--aviso-texto);
+  border-radius: 16px;
+  padding: 16px 18px;
+  max-width: 560px;
+}
+.aviso svg { width: 24px; height: 24px; margin-top: 2px; }
+.aviso strong { display: block; font-size: 1rem; margin-bottom: 2px; }
+.aviso p { margin: 0; font-size: 0.9375rem; line-height: 1.55; }
+
+section { padding-block: 56px; }
+section.alt { background: var(--bg-alt); }
+h2 {
+  font: 800 clamp(1.75rem, 4vw, 2.375rem)/1.1 var(--titulo);
+  margin: 0 0 10px;
+  text-wrap: balance;
+}
+.intro { color: var(--muted); margin: 0 0 32px; max-width: 40em; }
+
+.passos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; counter-reset: passo; }
+.passos li {
+  counter-increment: passo;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 22px 24px;
+  box-shadow: var(--sombra);
+  min-width: 0;
+}
+.passos li::before {
+  content: counter(passo);
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--azul);
+  color: #fff;
+  font: 800 1.25rem/1 var(--titulo);
+  margin-bottom: 14px;
+}
+.passos li:nth-child(2)::before { background: var(--roxo); }
+.passos li:nth-child(3)::before { background: var(--ouro); color: #2B1D00; }
+.passos h3, .recursos h3 { font: 700 1.25rem/1.25 var(--titulo); margin: 0 0 6px; }
+.passos p, .recursos p { margin: 0; color: var(--muted); font-size: 0.9875rem; }
+.exemplo {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--bg-alt);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.recursos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 40px; }
+.recursos > div { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: start; min-width: 0; }
+.recursos .icone {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--azul);
+}
+.recursos .icone svg { width: 22px; height: 22px; }
+
+.instalar { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: start; }
+.instalar ol { margin: 0; padding-left: 1.3em; display: grid; gap: 12px; }
+.instalar ol li::marker { font-weight: 800; color: var(--azul); }
+.quadro {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 22px 24px;
+  box-shadow: var(--sombra);
+}
+.quadro h3 { font: 700 1.25rem/1.25 var(--titulo); margin: 0 0 10px; }
+.quadro ul { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; color: var(--muted); font-size: 0.9875rem; }
+
+footer { padding-block: 32px 40px; color: var(--muted); font-size: 0.875rem; }
+footer .envoltorio { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+
+@media (max-width: 820px) {
+  .heroi .envoltorio { grid-template-columns: 1fr; gap: 8px; padding-block: 12px 44px; }
+  .heroi .personagens { order: -1; max-width: 220px; }
+  .passos, .recursos, .instalar { grid-template-columns: minmax(0, 1fr); }
+  section { padding-block: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .botao { transition: none; }
+  .botao:hover { transform: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="faixa-teste" role="note">Versão de teste: o app ainda está sendo testado e pode ter erros.</div>
+
+<header class="topo">
+  <div class="envoltorio">
+    <a class="marca" href="./">
+      <img src="img/icone-180.png" alt="" width="40" height="40">
+      <span>Conquistou</span>
+    </a>
+    <span class="selo">Em teste</span>
+  </div>
+</header>
+
+<main>
+  <div class="heroi">
+    <div class="envoltorio">
+      <div>
+        <h1>Tarefas de casa que viram <em>conquistas</em>.</h1>
+        <p class="lead">O Conquistou é o app da família: os responsáveis combinam as tarefas, os filhos mostram que fizeram e cada tarefa aprovada vira mesada na carteira deles.</p>
+
+        <div class="baixar" id="baixar">
+          <a class="botao" href="https://github.com/BandSpec/conquistou/releases/latest/download/Conquistou.apk">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Baixar para Android
+          </a>
+          <span class="detalhe">Versão <strong>3.3.1</strong> (teste) · arquivo APK de cerca de 85 MB<br>Só para Android. Ainda não tem versão para iPhone.</span>
+        </div>
+
+        <div class="aviso" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <div>
+            <strong>O app ainda está em teste</strong>
+            <p>Ele já funciona, mas pode ter erros e mudar bastante entre uma versão e outra. Ainda não está na Play Store: a instalação é feita pelo arquivo, como explicado abaixo. Encontrou um problema? Conte para quem te mandou este link.</p>
+          </div>
+        </div>
+      </div>
+      <img class="personagens" src="img/personagens.webp" width="640" height="661" alt="Os dois personagens do Conquistou, um roxo e um azul, comemorando com um troféu">
+    </div>
+  </div>
+
+  <section class="alt" aria-labelledby="como-funciona">
+    <div class="envoltorio">
+      <h2 id="como-funciona">Como funciona</h2>
+      <p class="intro">Três passos, todo dia.</p>
+      <ol class="passos">
+        <li>
+          <h3>O responsável combina a tarefa</h3>
+          <p>Escolhe o filho, o valor, os dias e o horário. Pode colocar uma foto do "antes" ou um ícone pronto, para quem ainda não sabe ler.</p>
+          <span class="exemplo">Arrumar a cama · R$ 2,00 · todo dia até 12h</span>
+        </li>
+        <li>
+          <h3>O filho mostra que fez</h3>
+          <p>Abre o app, vê as tarefas de hoje e envia uma foto, um áudio ou um vídeo como comprovante.</p>
+          <span class="exemplo">Foto da cama arrumada às 9h40</span>
+        </li>
+        <li>
+          <h3>Aprovou, conquistou</h3>
+          <p>O responsável vê o antes e o depois lado a lado e aprova. O valor entra na hora na carteira do filho.</p>
+          <span class="exemplo">Saldo: R$ 18,00 → R$ 20,00</span>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="recursos">
+    <div class="envoltorio">
+      <h2 id="recursos">O que já tem no app</h2>
+      <p class="intro">Feito para famílias com filhos de idades diferentes.</p>
+      <div class="recursos">
+        <div>
+          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="14" rx="3"/><path d="M16 13h2"/><path d="M2 10h20"/></svg></span>
+          <div><h3>Carteira e extrato</h3><p>Cada filho vê o saldo e tudo o que entrou e saiu, tarefa por tarefa.</p></div>
+        </div>
+        <div>
+          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg></span>
+          <div><h3>Metas</h3><p>O filho escolhe algo que quer comprar, coloca a foto e acompanha quanto falta.</p></div>
+        </div>
+        <div>
+          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3z"/><path d="M21 14v7h-7"/></svg></span>
+          <div><h3>Mesada via PIX</h3><p>O filho pede a mesada, o app gera o QR Code PIX e o responsável paga pelo banco.</p></div>
+        </div>
+        <div>
+          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M10 8h4"/><path d="M10 12h4"/><path d="M11 18h2"/></svg></span>
+          <div><h3>Entrada com PIN para os pequenos</h3><p>Crianças sem e-mail entram só com um PIN, no celular que o responsável configurou. Irmãos podem dividir o mesmo aparelho.</p></div>
+        </div>
+        <div>
+          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span>
+          <div><h3>Avisos no celular</h3><p>Lembrete antes do prazo para o filho e aviso para o responsável quando tem tarefa para aprovar. Fica em silêncio das 21h às 7h.</p></div>
+        </div>
+        <div>
+          <span class="icone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v18"/><path d="M5 7h14"/><path d="m5 7-3 7a3 3 0 0 0 6 0Z"/><path d="m19 7-3 7a3 3 0 0 0 6 0Z"/></svg></span>
+          <div><h3>Regras combinadas</h3><p>Desconto manual ou regra automática, como "3 tarefas esquecidas em 7 dias desconta R$ 5".</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="alt" aria-labelledby="instalar">
+    <div class="envoltorio instalar">
+      <div>
+        <h2 id="instalar">Como instalar</h2>
+        <p class="intro">Como o app ainda não está na Play Store, o Android pede uma confirmação a mais.</p>
+        <ol>
+          <li>No celular Android, toque em <a href="#baixar">Baixar para Android</a>.</li>
+          <li>Quando o download terminar, abra o arquivo <strong>Conquistou.apk</strong> (pela notificação ou pela pasta Downloads).</li>
+          <li>Se aparecer "instalação bloqueada", toque em <strong>Configurações</strong> e ative <strong>Permitir desta fonte</strong> para o navegador que você usou.</li>
+          <li>Volte e toque em <strong>Instalar</strong>. Se o Play Protect perguntar, escolha <strong>Instalar mesmo assim</strong>.</li>
+          <li>Abra o Conquistou, crie a conta da família e cadastre os filhos.</li>
+        </ol>
+      </div>
+      <div class="quadro">
+        <h3>Bom saber</h3>
+        <ul>
+          <li>Precisa de Android. No iPhone o arquivo não abre.</li>
+          <li>Se você tinha o app de teste antigo, chamado <strong>Combinado</strong>, o Conquistou instala por cima e mantém seus dados.</li>
+          <li>Para atualizar, baixe de novo por esta página e instale por cima.</li>
+          <li>Na primeira vez, permita as notificações para receber os avisos de tarefa.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="envoltorio">
+    <span>Conquistou · versão de teste 3.3.1</span>
+    <span>Feito pela BandSpec</span>
+  </div>
+</footer>
+
+</body>
+</html>
