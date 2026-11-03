@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Teste do Tempo de Tela · Conquistou</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Versão de teste interna do tempo de tela do Conquistou (Android).">
+<meta name="theme-color" content="#0E1236">
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Manrope:wght@400;600;700;800&display=swap">
+<link rel="stylesheet" href="../css/legal.css">
+<style>
+  .baixar {
+    display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+    background: #FFB020; color: #2B1D00; font: 800 1.0625rem/1 var(--corpo);
+    padding: 16px 24px; border-radius: 16px; margin: 6px 0 10px;
+  }
+  .baixar svg { width: 22px; height: 22px; }
+  .alerta {
+    background: #FFF4DB; border: 1px solid #F2C46A; color: #6B4A00;
+    border-radius: 18px; padding: 16px 18px; margin-bottom: 28px;
+  }
+  .alerta p, .alerta li { color: inherit; }
+  .alerta strong { color: inherit; }
+  @media (prefers-color-scheme: dark) {
+    .alerta { background: #3A2C08; border-color: #7A5A12; color: #FFE2A3; }
+  }
+  ol { padding-left: 1.3em; display: grid; gap: 8px; margin: 0 0 12px; }
+  .check li { list-style: none; position: relative; }
+  .check li::before { content: "☐"; position: absolute; left: -1.3em; color: var(--roxo); }
+  .papel { font-size: 0.75rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; margin-right: 6px; }
+  .resp { background: rgba(47,102,255,0.15); color: var(--link); }
+  .filho { background: rgba(255,79,160,0.15); color: #C2246F; }
+  @media (prefers-color-scheme: dark) { .filho { color: #FF8CC2; } }
+</style>
+</head>
+<body>
+
+<div class="palco">
+  <header class="envoltorio topo">
+    <a class="marca" href="../">
+      <img src="../img/icone-180.png" alt="" width="38" height="38">
+      <span>Conquistou</span>
+    </a>
+    <span class="voltar">Página de teste</span>
+  </header>
+  <div class="envoltorio cabeca">
+    <h1>Teste do Tempo de Tela</h1>
+    <p>Versão 3.5.0 de teste, só para Android. Tarefas que valem minutos de tela e bloqueio de apps.</p>
+  </div>
+</div>
+
+<main class="envoltorio">
+  <div class="alerta">
+    <strong>Versão interna de teste.</strong>
+    <p>Este app se chama <strong>Conquistou Teste</strong> e instala <strong>ao lado</strong> do Conquistou de verdade, sem mexer nele. Ele usa um servidor e um banco de teste: o que você fizer aqui não aparece no app de verdade. Nesta versão não chegam notificações e o login com Google não funciona (use e-mail e senha).</p>
+  </div>
+
+  <a class="baixar" href="https://github.com/BandSpec/conquistou/releases/download/teste-tempo-3.5.0/Conquistou-Teste.apk">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+    Baixar Conquistou Teste (APK)
+  </a>
+  <p class="atualizado" style="margin-top:0;border:0;padding:0">Versão 3.5.0 de teste · arquivo Conquistou-Teste.apk, cerca de 85 MB · Android</p>
+
+  <h2>Como instalar</h2>
+  <ol>
+    <li>No celular Android, toque no botão acima e abra o arquivo baixado.</li>
+    <li>Se aparecer "instalação bloqueada", toque em <strong>Configurações</strong> e ative <strong>Permitir desta fonte</strong>.</li>
+    <li>Toque em <strong>Instalar</strong> (se o Play Protect perguntar, <strong>Instalar mesmo assim</strong>). Vai aparecer um app novo, <strong>Conquistou Teste</strong>.</li>
+  </ol>
+
+  <h2>Testar com um celular só</h2>
+  <p>O mesmo celular faz os dois papéis: você entra como responsável, configura, sai e entra como filho.</p>
+  <ol>
+    <li><span class="papel resp">Responsável</span>Entre com e-mail e senha (ou crie uma família de teste). Em <strong>Editar filho</strong>, escolha <strong>📱 Tempo</strong> ou <strong>✨ Os dois</strong> e salve. Se não tiver filho, crie um com PIN.</li>
+    <li><span class="papel resp">Responsável</span>Saia da conta. Na tela inicial, toque em <strong>Configurar este aparelho para um filho</strong>, entre com o e-mail do responsável e escolha o filho.</li>
+    <li><span class="papel filho">Filho</span>Entre com o PIN. Abra a aba <strong>Tela</strong> e libere as 3 permissões com os botões <strong>Liberar</strong> (acesso ao uso, sobrepor apps, bateria).</li>
+    <li><span class="papel resp">Responsável</span>Saia e entre como responsável. <strong>Editar filho → Tempo de tela</strong>: a lista de apps do celular aparece. Ligue o interruptor do YouTube (ou outro app).</li>
+    <li><span class="papel resp">Responsável</span>Crie uma tarefa para o filho valendo <strong>30 min</strong>.</li>
+    <li><span class="papel filho">Filho</span>Entre como filho. Tente abrir o YouTube: deve aparecer a tela <strong>"YouTube está bloqueado"</strong>. Depois envie a foto da tarefa.</li>
+    <li><span class="papel resp">Responsável</span>Entre como responsável e aprove a tarefa.</li>
+    <li><span class="papel filho">Filho</span>Entre como filho, abra a aba <strong>Tela</strong> (30 min) e toque em <strong>Ativar</strong>. Use o YouTube alguns minutos e largue o celular.</li>
+    <li>Depois de <strong>5 minutos</strong> sem usar, o YouTube volta a bloquear. O extrato mostra só o tempo que foi usado de verdade, e o resto fica guardado.</li>
+  </ol>
+
+  <h2>O que conferir</h2>
+  <ul class="check">
+    <li>App bloqueado mostra a tela de bloqueio na hora.</li>
+    <li>Depois de Ativar, o app bloqueado abre normalmente e o contador da aba Tela desce só enquanto ele está aberto.</li>
+    <li>"Parar e guardar o resto" bloqueia de novo e mantém o saldo.</li>
+    <li>Saldo zerado durante o uso: bloqueia na hora com "Seu tempo de tela acabou".</li>
+    <li>Extrato do filho (aba Tela) e do responsável (Tempo de tela) com crédito da tarefa e o uso por app.</li>
+    <li>Desligar e ligar o celular: o bloqueio volta sozinho.</li>
+    <li>Fechar o Conquistou Teste: o bloqueio continua.</li>
+  </ul>
+
+  <h2>Se algo der errado</h2>
+  <p>Anote a <strong>marca e o modelo do celular</strong> e o passo em que aconteceu. Algumas marcas (Xiaomi, Samsung, Motorola) desligam apps em segundo plano por conta própria, e isso pode exigir um ajuste a mais.</p>
+
+  <p class="atualizado">Página de teste interna, fora dos menus do site. Atualizada em 3 de novembro de 2026.</p>
+</main>
+
+</body>
+</html>
