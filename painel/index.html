@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Só scripts deste site; a API oficial e o Cloudinary (fotos) são os únicos endereços chamados. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://res.cloudinary.com; media-src https://res.cloudinary.com; connect-src 'self' https://conquistou-production.up.railway.app https://api.cloudinary.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex">
+<title>Área do responsável · Conquistou</title>
+<meta name="theme-color" content="#1B3FC4">
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="apple-touch-icon" href="../img/icone-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="painel.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
+<header class="barra" id="barra" hidden>
+  <div class="barra-dentro">
+    <a class="marca" href="#/">
+      <img src="../img/icone-180.png" alt="" width="36" height="36">
+      <span>Conquistou</span>
+    </a>
+    <nav class="abas" id="abas" aria-label="Seções"></nav>
+    <div class="barra-acoes" id="barra-acoes"></div>
+  </div>
+</header>
+<main id="conteudo" tabindex="-1">
+  <div class="carregando-tela" role="status"><span class="girando" aria-hidden="true"></span> Carregando...</div>
+</main>
+<div id="avisos" class="avisos" role="status" aria-live="polite"></div>
+<noscript><p class="sem-js">A Área do responsável precisa do JavaScript ligado no navegador.</p></noscript>
+</body>
+</html>

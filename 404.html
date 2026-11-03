@@ -8,6 +8,8 @@
 <script>
   // O endereço diferencia maiúsculas: /testetempo (como o teclado do celular escreve) vai para /testeTempo/
   if (/^\/teste-?tempo\/?$/i.test(location.pathname)) location.replace("/testeTempo/");
+  // Área do responsável: /Painel, /PAINEL... vão para /painel/
+  if (/^\/painel\/?$/i.test(location.pathname)) location.replace("/painel/" + location.hash);
 </script>
 <style>
   body { font-family: system-ui, sans-serif; text-align: center; padding: 64px 16px; background: #fff; color: #0E1236; }
