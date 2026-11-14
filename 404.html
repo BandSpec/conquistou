@@ -6,8 +6,6 @@
 <meta name="robots" content="noindex">
 <title>Página não encontrada · Conquistou</title>
 <script>
-  // O endereço diferencia maiúsculas: /testetempo (como o teclado do celular escreve) vai para /testeTempo/
-  if (/^\/teste-?tempo\/?$/i.test(location.pathname)) location.replace("/testeTempo/");
   // Área do responsável: /Painel, /PAINEL... vão para /painel/
   if (/^\/painel\/?$/i.test(location.pathname)) location.replace("/painel/" + location.hash);
 </script>
