@@ -31,6 +31,7 @@ const ROTAS = [
   ["/metas/:filhoId/nova", telas.telaFormularioMeta, "painel"],
   ["/metas/:filhoId/:metaId", telas.telaDetalheMeta, "painel"],
   ["/metas/:filhoId/:metaId/editar", telas.telaFormularioMeta, "painel"],
+  ["/cupons", telas.telaCupons, "cupons"],
   ["/perfil", telas.telaPerfil, null],
   ["/excluir-conta", telas.telaExcluirConta, null],
 ];
@@ -41,12 +42,22 @@ const ABAS = [
   ["tarefas", "#/tarefas", "Tarefas", "lista"],
   ["castigos", "#/castigos", "Castigos", "escudo"],
 ];
+// só aparece para o administrador do Conquistou (o servidor confere de novo em cada chamada)
+const ABA_CUPONS = ["cupons", "#/cupons", "Cupons", "etiqueta"];
+let admin = false;
+async function conferirAdmin() {
+  try {
+    admin = !!(await api.souAdmin())?.admin;
+  } catch {
+    admin = false;
+  }
+}
 
 // ---------- barra com as abas ----------
 function mostrarBarra(abaAtiva, pendentes) {
   barra.hidden = false;
   document.body.classList.add("com-abas");
-  trocar(abas, ABAS.map(([id, href, texto, ic]) =>
+  trocar(abas, (admin ? [...ABAS, ABA_CUPONS] : ABAS).map(([id, href, texto, ic]) =>
     h("a", { href, "aria-current": id === abaAtiva ? "page" : null }, icone(ic), h("span", {}, texto),
       id === "aprovacoes" && pendentes > 0 ? h("span", { class: "contador", "aria-label": `${pendentes} pendentes` }, String(pendentes)) : null)));
   trocar(barraAcoes,
@@ -75,6 +86,7 @@ async function atualizarPendentes() {
 
 async function sair() {
   await auth.sair();
+  admin = false;
   avisar("Você saiu da conta.");
   ir("/entrar", { substituir: true });
 }
@@ -218,6 +230,7 @@ async function concluirLogin(resultado, manter) {
     throw new Error("Esta área é só para o responsável. Os filhos usam o app Conquistou no celular.");
   }
   aplicarResultado(resultado, manter);
+  await conferirAdmin();
   const guardado = sessionStorage.getItem("conquistou.painel.destino");
   sessionStorage.removeItem("conquistou.painel.destino");
   const destino = guardado ?? (location.hash.replace(/^#/, "") || "/");
@@ -277,6 +290,7 @@ async function iniciar() {
   } else if (sessaoAtual() && (await garantirSessao()) === false) {
     limparSessao(); // refresh token vencido ou revogado (sem internet a sessão fica guardada)
   }
+  if (sessaoAtual() && !handoff) await conferirAdmin();
 
   window.addEventListener("hashchange", desenhar);
   window.addEventListener("conquistou:atualizou", atualizarPendentes);

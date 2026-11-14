@@ -19,5 +19,7 @@ este site no CORS e no retorno do Google (configuração `PainelWeb` no backend)
 - Imagens dos avatares e ícones de tarefa: cópia de `mobile/assets` do app.
 - Sessão: o token de acesso fica só na memória; o de renovação na aba (ou no navegador, se marcar
   "Manter conectado"). Sair revoga no servidor.
+- Aba **Cupons** (`#/cupons`): só aparece para o administrador (e-mail em `Admin__Emails__0` no
+  backend; o servidor confere de novo em cada chamada). Lista, cria, ativa e desativa cupons de desconto.
 - Testar no computador: em `localhost` o painel chama a API no próprio endereço (use um servidor
   local que simule a API); fora dele, sempre a oficial.

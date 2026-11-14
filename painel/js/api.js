@@ -238,6 +238,12 @@ export const api = {
   movimentacoesMeta: (id) => get(`/api/metas/${id}/movimentacoes`),
 
   perfil: () => get("/api/perfil"),
+
+  // administração (só o e-mail de Admin:Emails no servidor; os outros recebem 403)
+  souAdmin: () => get("/api/admin/eu"),
+  cupons: () => get("/api/admin/cupons"),
+  criarCupom: (codigo, percentual) => post("/api/admin/cupons", { codigo, percentual }),
+  definirCupomAtivo: (id, ativo) => put(`/api/admin/cupons/${id}/ativo`, { ativo }),
   atualizarFoto: (fotoUrl) => put("/api/perfil/foto", { fotoUrl }),
 };
 

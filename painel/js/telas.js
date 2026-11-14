@@ -1135,3 +1135,62 @@ export function telaExcluirConta(main, _p, _b, { aoExcluir }) {
     h("div", { style: { marginTop: "16px" } }, form)
   ));
 }
+
+// ======================================================================
+// CUPONS (só o administrador; docs/v3.6/cupons.md no repositório do app)
+// ======================================================================
+export function telaCupons(main) {
+  carregar(main, api.cupons, (cupons) => {
+    const linha = (c) => {
+      const estado = h("span", { class: `pilula ${c.ativo ? "sucesso" : ""}` }, c.ativo ? "Ativo" : "Desativado");
+      const alternar = botao(c.ativo ? "Desativar" : "Ativar", (ev) => comCarregando(ev.currentTarget, async () => {
+        try {
+          const novo = await api.definirCupomAtivo(c.id, !c.ativo);
+          avisar(`Cupom ${novo.codigo} ${novo.ativo ? "ativado" : "desativado"}.`);
+          telaCupons(main);
+        } catch (e) {
+          avisar(mensagemDeErro(e), { erro: true });
+        }
+      }), { classe: `pequeno ${c.ativo ? "perigo" : ""}` });
+      return h("div", { class: `cartao ${c.ativo ? "" : "inativo"}` },
+        h("div", { class: "item" },
+          h("div", { class: "texto" },
+            h("div", { class: "titulo-item" }, c.codigo),
+            h("div", { class: "meta" },
+              `${c.percentual}% de desconto no 1º período · ${c.usos} uso${c.usos === 1 ? "" : "s"}`,
+              c.ofertaGoogle ? ` · oferta no Google Play: ${c.ofertaGoogle}` : " · libera o plano sem cobrança")),
+          estado, alternar));
+    };
+
+    const codigo = h("input", { type: "text", placeholder: "ex: NATAL30", maxlength: 30, autocomplete: "off", style: { textTransform: "uppercase" } });
+    const percentual = h("input", { type: "number", min: 1, max: 100, step: 1, placeholder: "ex: 30" });
+    const erro = erroForm();
+    const form = h("form", { class: "cartao", novalidate: true, style: { marginTop: "16px" } },
+      h("div", { class: "titulo-item" }, "Novo cupom"),
+      h("div", { class: "dupla", style: { marginTop: "12px" } }, campo("Código", codigo), campo("Desconto (%)", percentual)),
+      h("small", { class: "dica" }, "Abaixo de 100%, crie no Play Console a oferta \"cupom-N\" (N = o desconto) em cada plano base, senão o app avisa que o cupom ainda não está disponível."),
+      erro,
+      botao("Criar cupom", null, { tipo: "submit" }));
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const texto = codigo.value.replace(/\s/g, "").toUpperCase();
+      const pct = Number(percentual.value);
+      if (!/^[A-Z0-9]{3,30}$/.test(texto)) return mostrarErro(erro, "O código tem de ter de 3 a 30 letras ou números, sem espaço.");
+      if (!(pct >= 1 && pct <= 100 && Number.isInteger(pct))) return mostrarErro(erro, "O desconto vai de 1% a 100%.");
+      comCarregando(enviador(ev), async () => {
+        try {
+          await api.criarCupom(texto, pct);
+          avisar(`Cupom ${texto} criado.`);
+          telaCupons(main);
+        } catch (e) {
+          mostrarErro(erro, mensagemDeErro(e, "Não foi possível criar o cupom."));
+        }
+      });
+    });
+
+    trocar(main, h("div", { class: "estreito" },
+      cabecalho("Cupons de desconto", "O desconto vale no 1º mês ou no 1º ano. Desativado, o app recusa o cupom na hora."),
+      cupons.length === 0 ? cartaoVazio("Nenhum cupom ainda.") : h("div", { class: "pilha" }, cupons.map(linha)),
+      form));
+  });
+}
