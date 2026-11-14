@@ -199,7 +199,8 @@ function cartaoOcorrencia(o, genero, recarregar) {
       : h("div", { class: "linha", style: { marginTop: "12px" } },
           h("span", { class: `pilula ${tom}` }, texto),
           h("span", { class: "espaco" }),
-          o.midiaUrl ? botao("Ver comprovante", () => verComprovante(o, recarregar), { classe: "texto pequeno" }) : null)
+          o.midiaUrl ? botao("Ver comprovante", () => verComprovante(o, recarregar), { classe: "texto pequeno" })
+            : o.midiaRemovida ? h("span", { class: "dica", style: { margin: 0 } }, "Comprovante removido") : null) // v3.6: apagado depois de 30 dias
   );
 }
 
