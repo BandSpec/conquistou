@@ -1,7 +1,7 @@
 // Área do responsável do Conquistou: o pai/mãe faz pelo navegador o que faz no app.
 // Começo da página: conclui o login com Google (se voltou dele), confere a sessão e desenha a tela da rota.
 
-import { auth, api, aplicarResultado, sessaoAtual, garantirSessao, limparSessao, definirAoExpirar, mensagemDeErro } from "./api.js";
+import { auth, api, aplicarResultado, sessaoAtual, garantirSessao, limparSessao, definirAoExpirar, mensagemDeErro, novoDesafioGoogle, verificadorGoogle } from "./api.js";
 import { h, trocar, icone, iconeGoogle, botao, comCarregando, campo, avisar, carregandoTela } from "./ui.js";
 import { rotaAtual, ir, casar } from "./rotas.js";
 import * as telas from "./telas.js";
@@ -103,7 +103,7 @@ function botaoGoogle(manter) {
   const b = botao("Entrar com o Google", (ev) => comCarregando(ev.currentTarget, async () => {
     try {
       sessionStorage.setItem(CHAVE_MANTER, manter() ? "1" : "0");
-      const { authUrl } = await auth.iniciarGoogle(RETORNO_GOOGLE);
+      const { authUrl } = await auth.iniciarGoogle(RETORNO_GOOGLE, await novoDesafioGoogle());
       if (!/^https:\/\/accounts\.google\.com\//.test(authUrl)) throw new Error("Endereço de login inesperado.");
       location.assign(authUrl);
       await new Promise(() => {}); // segura o "Aguarde..." até o navegador sair da página
@@ -282,7 +282,7 @@ async function iniciar() {
     const manter = sessionStorage.getItem(CHAVE_MANTER) === "1";
     sessionStorage.removeItem(CHAVE_MANTER);
     try {
-      await concluirLogin(await auth.trocarGoogle(handoff), manter);
+      await concluirLogin(await auth.trocarGoogle(handoff, verificadorGoogle()), manter);
     } catch (e) {
       limparSessao();
       avisar(mensagemDeErro(e, "Não foi possível entrar com o Google."), { erro: true });
