@@ -173,12 +173,35 @@ const post = (c, corpo, o) => chamar("POST", c, { ...o, corpo: corpo ?? undefine
 const put = (c, corpo, o) => chamar("PUT", c, { ...o, corpo });
 const del = (c, o) => chamar("DELETE", c, o);
 
+// ---------- login com Google: prova de que quem conclui o login é quem começou ----------
+const CHAVE_VERIFICADOR = "conquistou.painel.google";
+
+function base64Url(bytes) {
+  return btoa(String.fromCharCode(...bytes)).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
+}
+
+/** Cria o segredo desta aba (guardado até a volta do Google) e devolve o "desafio" para mandar ao servidor. */
+export async function novoDesafioGoogle() {
+  const verificador = base64Url(crypto.getRandomValues(new Uint8Array(32)));
+  sessionStorage.setItem(CHAVE_VERIFICADOR, verificador);
+  const resumo = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verificador));
+  return base64Url(new Uint8Array(resumo));
+}
+
+/** Lê (e apaga) o segredo guardado antes de ir para o Google. */
+export function verificadorGoogle() {
+  const verificador = sessionStorage.getItem(CHAVE_VERIFICADOR);
+  sessionStorage.removeItem(CHAVE_VERIFICADOR);
+  return verificador;
+}
+
 // ---------- autenticação ----------
 export const auth = {
   entrar: (email, senha) => post("/api/auth/login", { email, senha }, { publico: true, padrao: "E-mail ou senha incorretos." }),
   registrar: (dados) => post("/api/auth/registrar", dados, { publico: true }),
-  iniciarGoogle: (retorno) => get("/api/auth/google/iniciar", { parametros: { appRedirect: retorno }, publico: true }),
-  trocarGoogle: (handoff) => post("/api/auth/google/trocar", { handoff }, { publico: true, padrao: "Login com Google expirado. Tente novamente." }),
+  // "desafio" = SHA-256 (base64url) de um segredo que só esta aba tem; o segredo vai no trocarGoogle
+  iniciarGoogle: (retorno, desafio) => get("/api/auth/google/iniciar", { parametros: { appRedirect: retorno, desafio }, publico: true }),
+  trocarGoogle: (handoff, verificador) => post("/api/auth/google/trocar", { handoff, verificador: verificador || undefined }, { publico: true, padrao: "Login com Google expirado. Tente novamente." }),
   aceitarTermos: () => post("/api/auth/aceitar-termos"),
   async sair() {
     const refresh = sessao?.refreshToken;
@@ -192,7 +215,8 @@ export const auth = {
       }).catch(() => {});
     }
   },
-  excluirFamilia: (confirmacao) => post("/api/familia/excluir", { confirmacao }),
+  // senha: obrigatória para quem entra com e-mail e senha (quem entra pelo Google não tem)
+  excluirFamilia: (confirmacao, senha) => post("/api/familia/excluir", { confirmacao, senha: senha || undefined }),
 };
 
 // ---------- dados do responsável ----------
@@ -242,7 +266,7 @@ export const api = {
   // administração (só o e-mail de Admin:Emails no servidor; os outros recebem 403)
   souAdmin: () => get("/api/admin/eu"),
   cupons: () => get("/api/admin/cupons"),
-  criarCupom: (codigo, percentual) => post("/api/admin/cupons", { codigo, percentual }),
+  criarCupom: (codigo, percentual, limiteUsos, validoAte) => post("/api/admin/cupons", { codigo, percentual, limiteUsos: limiteUsos ?? undefined, validoAte: validoAte ?? undefined }),
   definirCupomAtivo: (id, ativo) => put(`/api/admin/cupons/${id}/ativo`, { ativo }),
   atualizarFoto: (fotoUrl) => put("/api/perfil/foto", { fotoUrl }),
 };
@@ -269,8 +293,26 @@ export async function enviarFoto(arquivo) {
   if (!arquivo.type.startsWith("image/")) throw new Error("Escolha um arquivo de imagem (foto).");
   const dados = new FormData();
   dados.append("file", await reduzirFoto(arquivo), "foto.jpg");
-  dados.append("upload_preset", CLOUDINARY_PRESET);
-  const resposta = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method: "POST", body: dados });
+  // O servidor assina o envio (só para quem está logado) e a foto vai para a pasta da família. Se o servidor
+  // ainda não assina, cai no preset sem assinatura de antes.
+  let assinatura = null;
+  try {
+    const a = await post("/api/midia/cloudinary/assinatura");
+    if (a?.assinado && a.cloudName && a.apiKey && a.timestamp && a.pasta && a.assinatura) assinatura = a;
+  } catch {
+    assinatura = null;
+  }
+  if (assinatura) {
+    dados.append("api_key", assinatura.apiKey);
+    dados.append("timestamp", String(assinatura.timestamp));
+    dados.append("folder", assinatura.pasta);
+    dados.append("signature", assinatura.assinatura);
+  } else {
+    dados.append("upload_preset", CLOUDINARY_PRESET);
+  }
+  const conta = assinatura?.cloudName ?? CLOUDINARY_CLOUD;
+  if (!/^[A-Za-z0-9_-]+$/.test(conta)) throw new Error("Não foi possível enviar a foto. Tente novamente.");
+  const resposta = await fetch(`https://api.cloudinary.com/v1_1/${conta}/image/upload`, { method: "POST", body: dados });
   if (!resposta.ok) {
     let detalhe;
     try {

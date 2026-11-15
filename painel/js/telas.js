@@ -1107,13 +1107,16 @@ export function telaExcluirConta(main, _p, _b, { aoExcluir }) {
   const erro = erroForm();
   const excluir = botao("Excluir conta para sempre", null, { tipo: "submit", classe: "perigo largo", desabilitado: true });
   confirmacao.addEventListener("input", () => (excluir.disabled = confirmacao.value.trim().toUpperCase() !== PALAVRA));
-  const form = h("form", { class: "cartao", novalidate: true }, campo(`Digite ${PALAVRA} para confirmar`, confirmacao), erro, excluir, h("a", { class: "botao texto", href: "#/perfil" }, "Cancelar"));
+  // quem entra com e-mail e senha confirma com a senha; quem entra pelo Google deixa vazio
+  const senha = h("input", { type: "password", placeholder: "Deixe vazio se você entra com o Google", autocomplete: "current-password" });
+  const form = h("form", { class: "cartao", novalidate: true }, campo(`Digite ${PALAVRA} para confirmar`, confirmacao),
+    campo("Sua senha (se você entra com e-mail e senha)", senha), erro, excluir, h("a", { class: "botao texto", href: "#/perfil" }, "Cancelar"));
   form.addEventListener("submit", (ev) => {
     ev.preventDefault();
     if (confirmacao.value.trim().toUpperCase() !== PALAVRA) return;
     comCarregando(excluir, async () => {
       try {
-        await auth.excluirFamilia(confirmacao.value.trim());
+        await auth.excluirFamilia(confirmacao.value.trim(), senha.value);
         limparSessao();
         aoExcluir();
       } catch (e) {
@@ -1131,7 +1134,8 @@ export function telaExcluirConta(main, _p, _b, { aoExcluir }) {
         h("li", {}, "tarefas, comprovantes (fotos, áudios e vídeos) e aprovações"),
         h("li", {}, "saldo, extrato, metas, cofrinhos, pedidos de mesada e descontos"),
         h("li", {}, "os celulares configurados para os filhos")),
-      h("p", { style: { margin: 0 } }, "Quem estiver usando o app em outro celular sai na próxima vez que ele falar com o servidor.")),
+      h("p", { style: { margin: "0 0 8px" } }, "Quem estiver usando o app em outro celular sai na próxima vez que ele falar com o servidor."),
+      h("p", { style: { margin: 0, fontWeight: 700 } }, "Se você assina um plano, cancele antes no Google Play (Play Store > sua foto > Pagamentos e assinaturas). Excluir a conta não cancela a cobrança.")),
     h("div", { style: { marginTop: "16px" } }, form)
   ));
 }
@@ -1157,17 +1161,23 @@ export function telaCupons(main) {
           h("div", { class: "texto" },
             h("div", { class: "titulo-item" }, c.codigo),
             h("div", { class: "meta" },
-              `${c.percentual}% de desconto no 1º período · ${c.usos} uso${c.usos === 1 ? "" : "s"}`,
-              c.ofertaGoogle ? ` · oferta no Google Play: ${c.ofertaGoogle}` : " · libera o plano sem cobrança")),
+              `${c.percentual}% de desconto no 1º período · ${c.limiteUsos ? `${c.usos} de ${c.limiteUsos} usos` : `${c.usos} uso${c.usos === 1 ? "" : "s"}`}`,
+              c.validoAte ? ` · vale até ${new Date(c.validoAte).toLocaleDateString("pt-BR")}` : "",
+              c.ofertaGoogle ? ` · oferta no Google Play: ${c.ofertaGoogle}` : " · libera o plano por 1 mês, sem cobrança",
+              c.percentual === 100 && !c.limiteUsos ? " · sem limite de usos: não pode ser ativado" : "")),
           estado, alternar));
     };
 
     const codigo = h("input", { type: "text", placeholder: "ex: NATAL30", maxlength: 30, autocomplete: "off", style: { textTransform: "uppercase" } });
     const percentual = h("input", { type: "number", min: 1, max: 100, step: 1, placeholder: "ex: 30" });
+    const limite = h("input", { type: "number", min: 1, max: 100000, step: 1, placeholder: "vazio = sem limite" });
+    const validade = h("input", { type: "date" });
     const erro = erroForm();
     const form = h("form", { class: "cartao", novalidate: true, style: { marginTop: "16px" } },
       h("div", { class: "titulo-item" }, "Novo cupom"),
       h("div", { class: "dupla", style: { marginTop: "12px" } }, campo("Código", codigo), campo("Desconto (%)", percentual)),
+      h("div", { class: "dupla", style: { marginTop: "12px" } }, campo("Limite de usos (famílias)", limite), campo("Vale até (opcional)", validade)),
+      h("small", { class: "dica" }, "Cupom de 100% libera 1 mês de plano sem cobrança: use um código difícil de adivinhar e sempre um limite de usos (sem informar, vale para 1 família só)."),
       h("small", { class: "dica" }, "Abaixo de 100%, crie no Play Console a oferta \"cupom-N\" (N = o desconto) em cada plano base, senão o app avisa que o cupom ainda não está disponível."),
       erro,
       botao("Criar cupom", null, { tipo: "submit" }));
@@ -1177,9 +1187,14 @@ export function telaCupons(main) {
       const pct = Number(percentual.value);
       if (!/^[A-Z0-9]{3,30}$/.test(texto)) return mostrarErro(erro, "O código tem de ter de 3 a 30 letras ou números, sem espaço.");
       if (!(pct >= 1 && pct <= 100 && Number.isInteger(pct))) return mostrarErro(erro, "O desconto vai de 1% a 100%.");
+      const max = limite.value.trim() === "" ? null : Number(limite.value);
+      if (max !== null && !(Number.isInteger(max) && max >= 1 && max <= 100000)) return mostrarErro(erro, "O limite de usos tem de ser um número de 1 a 100000.");
+      // a validade vale até o fim do dia escolhido (horário deste computador)
+      const ate = validade.value ? new Date(`${validade.value}T23:59:59`) : null;
+      if (ate && !(ate.getTime() > Date.now())) return mostrarErro(erro, "A validade tem de ser uma data de hoje em diante.");
       comCarregando(enviador(ev), async () => {
         try {
-          await api.criarCupom(texto, pct);
+          await api.criarCupom(texto, pct, max, ate ? ate.toISOString() : null);
           avisar(`Cupom ${texto} criado.`);
           telaCupons(main);
         } catch (e) {
