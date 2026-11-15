@@ -6,6 +6,8 @@
 //   se a pessoa marcar "Manter conectado", localStorage. Sair revoga o token no servidor.
 // Nada de cookie (a API é outro domínio). A página só roda scripts dela mesma (ver CSP no index.html).
 
+import { registrarPrevia } from "./previas.js";
+
 const API_OFICIAL = "https://conquistou-production.up.railway.app";
 // No computador do desenvolvedor (localhost) a página fala com a API simulada servida no mesmo endereço.
 const LOCAL = location.hostname === "localhost" || location.hostname === "127.0.0.1";
@@ -289,8 +291,30 @@ async function reduzirFoto(arquivo) {
   }
 }
 
+// Fotos novas vão direto para o Cloudflare R2: a API devolve uma URL de envio curta (PUT) e a chave "r2:...".
+// Se o servidor ainda não tem o R2, é antigo, ou o navegador for barrado (falta o CORS do bucket para este
+// site), cai no Cloudinary como antes, para o painel não parar.
 export async function enviarFoto(arquivo) {
   if (!arquivo.type.startsWith("image/")) throw new Error("Escolha um arquivo de imagem (foto).");
+  const imagem = await reduzirFoto(arquivo);
+  if (["image/jpeg", "image/png", "image/webp"].includes(imagem.type)) {
+    try {
+      const pedido = await post("/api/midia/foto/envio", { tamanhoBytes: imagem.size, contentType: imagem.type });
+      if (pedido && !pedido.usarCloudinary && pedido.urlEnvio && pedido.midia) {
+        const resposta = await fetch(pedido.urlEnvio, { method: "PUT", headers: { "Content-Type": pedido.contentType ?? imagem.type }, body: imagem });
+        if (resposta.ok) {
+          registrarPrevia(pedido.midia, URL.createObjectURL(imagem));
+          return pedido.midia;
+        }
+      }
+    } catch {
+      // segue para o Cloudinary
+    }
+  }
+  return enviarFotoCloudinary(arquivo);
+}
+
+async function enviarFotoCloudinary(arquivo) {
   const dados = new FormData();
   dados.append("file", await reduzirFoto(arquivo), "foto.jpg");
   // O servidor assina o envio (só para quem está logado) e a foto vai para a pasta da família. Se o servidor
