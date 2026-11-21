@@ -205,6 +205,9 @@ export const auth = {
   iniciarGoogle: (retorno, desafio) => get("/api/auth/google/iniciar", { parametros: { appRedirect: retorno, desafio }, publico: true }),
   trocarGoogle: (handoff, verificador) => post("/api/auth/google/trocar", { handoff, verificador: verificador || undefined }, { publico: true, padrao: "Login com Google expirado. Tente novamente." }),
   aceitarTermos: () => post("/api/auth/aceitar-termos"),
+  // "Esqueci a senha": o servidor manda um código de 6 números por e-mail (responde igual exista ou não a conta)
+  esqueciSenha: (email) => post("/api/auth/esqueci-senha", { email }, { publico: true, padrao: "Não foi possível enviar o código. Tente novamente." }),
+  redefinirSenha: (email, codigo, novaSenha) => post("/api/auth/redefinir-senha", { email, codigo, novaSenha }, { publico: true, padrao: "Não foi possível criar a senha nova. Confira o código." }),
   async sair() {
     const refresh = sessao?.refreshToken;
     limparSessao();
