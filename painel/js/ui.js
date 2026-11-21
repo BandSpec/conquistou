@@ -1,6 +1,8 @@
 // Peças de tela reaproveitadas: criar elementos, ícones, formatação, avisos, janelas e as cores de cada filho.
 // Todo texto vindo da API entra como texto (textContent), nunca como HTML.
 
+import { previaDe } from "./previas.js";
+
 export function h(tag, atributos, ...filhos) {
   const el = document.createElement(tag);
   for (const [chave, valor] of Object.entries(atributos ?? {})) {
@@ -167,6 +169,8 @@ const ICONES_IDS = new Set(ICONES_TAREFA.map(([id]) => id));
 
 /** Só endereços https (fotos enviadas). Qualquer outra coisa vira "sem imagem". */
 export function urlSegura(url) {
+  const previa = previaDe(url); // foto que acabou de ir para o R2 (chave "r2:..."): mostra a escolhida
+  if (previa) return previa;
   return typeof url === "string" && /^https:\/\//i.test(url) ? url : null;
 }
 
