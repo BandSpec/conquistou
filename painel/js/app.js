@@ -148,12 +148,75 @@ function telaEntrar() {
     h("h1", {}, "Área do responsável"),
     h("p", { class: "subtitulo" }, "Acompanhe as conquistas da família pelo computador."),
     form,
+    h("p", { class: "rodape-entrada", style: { marginTop: "8px" } }, h("a", { href: "#/esqueci-senha" }, "Esqueci a senha")),
     h("div", { class: "divisor", style: { margin: "16px 0" } }, "ou"),
     botaoGoogle(() => manter.checked),
     h("p", { class: "rodape-entrada" }, "Ainda não tem conta? ", h("a", { href: "#/criar-conta" }, "Criar conta da família")),
     h("p", { class: "rodape-entrada" }, "É filho? Use o app Conquistou no celular.")
   );
   email.focus();
+}
+
+// "Esqueci a senha": 1) informa o e-mail e recebe um código de 6 números; 2) digita o código e a senha nova.
+function telaEsqueciSenha() {
+  const email = h("input", { type: "email", autocomplete: "username", placeholder: "seu@email.com", required: true });
+  const codigo = h("input", { type: "text", inputmode: "numeric", autocomplete: "one-time-code", placeholder: "6 números", maxlength: 6 });
+  const nova = h("input", { type: "password", autocomplete: "new-password", placeholder: "Mínimo 8 caracteres" });
+  const repetir = h("input", { type: "password", autocomplete: "new-password", placeholder: "Repita a senha nova" });
+  const erro = h("p", { class: "erro", role: "alert", hidden: true });
+  const falhar = (t) => { erro.textContent = t; erro.hidden = false; };
+  const corpo = h("div", {});
+
+  const passo1 = () => {
+    erro.hidden = true;
+    const form = h("form", { novalidate: true },
+      h("p", { class: "subtitulo" }, "Informe o e-mail da sua conta. Vamos mandar um código de 6 números para você criar uma senha nova."),
+      campo("E-mail", email), erro,
+      botao("Enviar o código", null, { tipo: "submit", classe: "entrada largo" }));
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      if (!email.value.trim()) return falhar("Informe o e-mail.");
+      comCarregando(form.querySelector("[type=submit]"), async () => {
+        try {
+          await auth.esqueciSenha(email.value.trim());
+          passo2();
+        } catch (e) {
+          falhar(mensagemDeErro(e, "Não foi possível enviar o código. Tente novamente."));
+        }
+      });
+    });
+    trocar(corpo, form);
+    email.focus();
+  };
+
+  const passo2 = () => {
+    erro.hidden = true;
+    const form = h("form", { novalidate: true },
+      h("p", { class: "subtitulo" }, `Se existe uma conta com ${email.value.trim()}, o código chegou no e-mail (veja também a caixa de spam). Ele vale por 15 minutos.`),
+      campo("Código", codigo), campo("Nova senha", nova), campo("Repita a senha", repetir), erro,
+      botao("Criar a senha nova", null, { tipo: "submit", classe: "entrada largo" }),
+      botao("Voltar", () => passo1(), { classe: "texto largo" }));
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      if (!/^d{6}$/.test(codigo.value.trim())) return falhar("O código tem 6 números.");
+      if (nova.value.length < 8) return falhar("A senha precisa ter pelo menos 8 caracteres.");
+      if (nova.value !== repetir.value) return falhar("As duas senhas estão diferentes.");
+      comCarregando(form.querySelector("[type=submit]"), async () => {
+        try {
+          await auth.redefinirSenha(email.value.trim(), codigo.value.trim(), nova.value);
+          avisar("Senha criada. Agora é só entrar com a senha nova.");
+          ir("/entrar", { substituir: true });
+        } catch (e) {
+          falhar(mensagemDeErro(e, "Não foi possível criar a senha nova. Confira o código."));
+        }
+      });
+    });
+    trocar(corpo, form);
+    codigo.focus();
+  };
+
+  telaEntrada(h("h1", {}, "Esqueci a senha"), corpo, h("p", { class: "rodape-entrada" }, h("a", { href: "#/entrar" }, "Voltar para entrar")));
+  passo1();
 }
 
 function telaCriarConta() {
@@ -234,7 +297,7 @@ async function concluirLogin(resultado, manter) {
   const guardado = sessionStorage.getItem("conquistou.painel.destino");
   sessionStorage.removeItem("conquistou.painel.destino");
   const destino = guardado ?? (location.hash.replace(/^#/, "") || "/");
-  ir(destino.startsWith("/entrar") || destino.startsWith("/criar-conta") || destino.startsWith("/conta-excluida") ? "/" : destino, { substituir: true });
+  ir(destino.startsWith("/entrar") || destino.startsWith("/criar-conta") || destino.startsWith("/esqueci-senha") || destino.startsWith("/conta-excluida") ? "/" : destino, { substituir: true });
 }
 
 // ---------- desenho da rota atual ----------
@@ -245,12 +308,13 @@ function desenhar() {
 
   if (!logado) {
     if (caminho === "/criar-conta") return telaCriarConta();
-    if (caminho !== "/entrar") sessionStorage.setItem("conquistou.painel.destino", caminho + (busca.toString() ? `?${busca}` : ""));
+    if (caminho === "/esqueci-senha") return telaEsqueciSenha();
+    if (caminho !== "/entrar" && caminho !== "/esqueci-senha") sessionStorage.setItem("conquistou.painel.destino", caminho + (busca.toString() ? `?${busca}` : ""));
     if (caminho === "/conta-excluida") return telaContaExcluida();
     if (caminho !== "/entrar") return ir("/entrar", { substituir: true });
     return telaEntrar();
   }
-  if (caminho === "/entrar" || caminho === "/criar-conta") return ir("/", { substituir: true });
+  if (caminho === "/entrar" || caminho === "/criar-conta" || caminho === "/esqueci-senha") return ir("/", { substituir: true });
   if (sessaoAtual().precisaAceitarTermos) return telaTermos();
 
   for (const [modelo, tela, aba] of ROTAS) {
