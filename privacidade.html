@@ -48,6 +48,8 @@
         <tr><td>Mesada via PIX</td><td>A chave PIX do filho (CPF, celular, e-mail ou chave aleatória), os valores pedidos e a confirmação de pagamento feita pelo responsável.</td></tr>
         <tr><td>Tempo de tela (só Android, só se o responsável ligar)</td><td>A lista de apps instalados no celular do filho (nome e identificador de cada app), quais o responsável escolheu bloquear, os minutos ganhos com tarefas e, durante o tempo liberado, quanto tempo cada app bloqueado ficou aberto. Não lemos o que acontece dentro dos outros apps (mensagens, vídeos, fotos ou pesquisas).</td></tr>
         <tr><td>Celular</td><td>Um código aleatório criado no próprio celular para ligar o aparelho ao filho, e o código de notificações do aparelho.</td></tr>
+        <tr><td>Assinatura</td><td>O plano da família, a situação da assinatura (em teste, ativa, cancelada ou vencida) e a data de renovação. O pagamento é feito no Google Play: não vemos nem guardamos número de cartão ou outros dados de pagamento.</td></tr>
+        <tr><td>E-mail da conta</td><td>Para "Esqueci a senha" e para confirmar o e-mail, mandamos um código de 6 números. Ele vale 15 minutos e é guardado só de forma cifrada.</td></tr>
         <tr><td>Segurança</td><td>O número de tentativas de entrada erradas, para bloquear o acesso por um tempo depois de muitos erros.</td></tr>
       </tbody>
     </table>
@@ -60,6 +62,8 @@
     <li>Mostrar as tarefas, receber os comprovantes e registrar aprovações, saldo, metas e descontos.</li>
     <li>Gerar o código PIX quando o filho pede a mesada.</li>
     <li>Enviar avisos no celular, como tarefa perto do prazo ou tarefa para aprovar.</li>
+    <li>Enviar por e-mail o código para criar uma senha nova ou confirmar o e-mail.</li>
+    <li>Liberar os recursos do plano escolhido e conferir a assinatura feita no Google Play.</li>
     <li>No tempo de tela: bloquear os apps que o responsável escolheu, liberar pelo tempo ganho com tarefas e mostrar ao responsável o extrato de uso.</li>
     <li>Proteger as contas contra acessos indevidos.</li>
   </ul>
@@ -97,7 +101,10 @@
   <ul>
     <li><strong>Railway:</strong> hospeda o servidor do app.</li>
     <li><strong>Neon:</strong> guarda o banco de dados.</li>
-    <li><strong>Cloudinary:</strong> guarda as fotos, áudios e vídeos.</li>
+    <li><strong>Cloudflare:</strong> guarda as fotos de perfil, as imagens das tarefas e das metas e os comprovantes (fotos, áudios e vídeos) enviados a partir da versão 3.6.</li>
+    <li><strong>Cloudinary:</strong> guarda as fotos e os comprovantes enviados antes da versão 3.6.</li>
+    <li><strong>Resend:</strong> envia os e-mails com os códigos de segurança.</li>
+    <li><strong>Google Play e RevenueCat:</strong> cobram e controlam a assinatura. O RevenueCat recebe o código da sua família e a situação da assinatura, e não recebe dados de pagamento.</li>
     <li><strong>Expo e Google Firebase:</strong> entregam as notificações no celular.</li>
     <li><strong>Google:</strong> faz o login, se você escolher entrar com o Google.</li>
   </ul>
@@ -105,13 +112,15 @@
   <p>Também podemos compartilhar dados se uma lei ou uma ordem judicial exigir.</p>
 
   <h2>Por quanto tempo guardamos</h2>
-  <p>Enquanto a conta da família estiver ativa. Se você pedir para apagar a conta, apagamos os dados, exceto o que uma lei nos obrigue a guardar por mais tempo.</p>
+  <p>Enquanto a conta da família estiver ativa, com uma exceção: <strong>as fotos, áudios e vídeos dos comprovantes são apagados 30 dias depois de enviados</strong>, quando a tarefa já foi aprovada ou recusada. O registro da tarefa continua (o que foi feito, se foi aprovada, o valor e a data); só o arquivo some, e no lugar dele aparece "comprovante removido". Comprovantes que ainda esperam a decisão do responsável não são apagados.</p>
+  <p>Quando você troca ou remove uma foto de perfil, uma imagem de tarefa ou de meta, o arquivo antigo é apagado. Se você pedir para apagar a conta, apagamos todos os dados e arquivos na hora, exceto o que uma lei nos obrigue a guardar por mais tempo.</p>
 
   <h2>Como protegemos</h2>
   <ul>
     <li>Toda a comunicação entre o app e o servidor é criptografada (HTTPS).</li>
     <li>Senhas e PINs são guardados cifrados.</li>
     <li>Os dados de cada família ficam separados: uma família nunca vê os dados de outra.</li>
+    <li>As fotos, áudios e vídeos ficam num armazenamento privado: ninguém abre um arquivo pelo endereço. O app mostra cada um por um link que vale só algumas horas, e só para quem é da família.</li>
     <li>O acesso é bloqueado por um tempo depois de muitas tentativas erradas.</li>
   </ul>
   <p>Nenhum sistema é totalmente imune a falhas. Se acontecer um incidente de segurança que possa trazer risco a você, avisaremos você e a Autoridade Nacional de Proteção de Dados (ANPD), como manda a lei.</p>
@@ -130,7 +139,7 @@
   <h2>Versão de teste</h2>
   <p>O Conquistou está em fase de testes. Durante esse período o app pode mudar, e esta política também. Quando a mudança for importante, avisaremos no app ou neste site.</p>
 
-  <p class="atualizado">Última atualização: 13 de novembro de 2026. Veja também os <a href="termos.html">Termos de uso</a> e os <a href="direitos-autorais.html">Direitos autorais</a>.</p>
+  <p class="atualizado">Última atualização: 20 de novembro de 2026. Veja também os <a href="termos.html">Termos de uso</a> e os <a href="direitos-autorais.html">Direitos autorais</a>.</p>
 </main>
 
 <footer>
