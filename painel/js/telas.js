@@ -9,6 +9,7 @@ import {
 } from "./ui.js";
 import { criarQr } from "./qrcode.js";
 import { ir } from "./rotas.js";
+import { copiaDaTarefa, destinosDaCopia, recompensaCompativel } from "./duplicar.js";
 import { montarPrazo, horasDaJanela, fimDaJanela, resumoDaTarefa, SUGESTOES_TAREFA } from "./prazo.js";
 import { TOPICOS_SITE, filtrarTopicos } from "./ajuda.js";
 
@@ -648,7 +649,7 @@ export function telaNovaTarefa(main, { filhoId }) {
 }
 
 export function telaEditarTarefa(main, { filhoId, tarefaId }) {
-  carregar(main, () => api.tarefa(filhoId, tarefaId), (t) => {
+  carregar(main, () => Promise.all([api.tarefa(filhoId, tarefaId), api.filhos()]), ([t, todosFilhos]) => {
     const voltar = `#/tarefas?filho=${filhoId}`;
     let comprovacao = t.tiposComprovacaoAceitos;
     const imagem = { valor: t.imagemUrl, enviando: false };
@@ -712,7 +713,27 @@ export function telaEditarTarefa(main, { filhoId, tarefaId }) {
         });
       }, { classe: "texto", vars: { "--cor": "var(--danger-txt)" } })
     );
-    trocar(main, h("div", { class: "estreito" }, cabecalho("Editar tarefa", null, { voltar }), form, acoes));
+    // duplicar para outro filho: cria uma cópia que começa hoje, com o mesmo valor, horário e provas
+    const destinos = destinosDaCopia(todosFilhos, filhoId);
+    const duplicar = destinos.length === 0 ? null : h("div", { class: "cartao pilha" },
+      h("span", { class: "rotulo" }, "Duplicar para outro filho"),
+      h("small", { class: "dica" }, "Cria uma cópia desta tarefa para o filho escolhido, começando hoje."),
+      h("div", { class: "chips", role: "group", "aria-label": "Duplicar para", style: { marginBottom: 0 } }, destinos.map((f) =>
+        chip(f.nome, false, async (ev) => {
+          const btn = ev.currentTarget;
+          if (!recompensaCompativel(t, f)) return avisar(f.nome + " ganha " + (f.tipoRecompensa === "TempoDeTela" ? "minutos de tela" : "dinheiro") + ", e esta tarefa não rende isso. Crie uma tarefa nova para " + f.nome + ".", { erro: true });
+          const ok = await confirmar("Duplicar tarefa", "Criar \"" + t.titulo + "\" para " + f.nome + ", começando hoje, com o mesmo valor, horário e provas?", { sim: "Duplicar" });
+          if (!ok) return;
+          comCarregando(btn, async () => {
+            try {
+              await api.criarTarefa(f.usuarioId, copiaDaTarefa(t, dataIso(new Date())));
+              avisar("Tarefa duplicada para " + f.nome + ".");
+            } catch (err) {
+              avisar(mensagemDeErro(err), { erro: true });
+            }
+          });
+        }, { vars: varsTema(f.genero), antes: avatar(f.nome, f.fotoUrl, 22) }))));
+    trocar(main, h("div", { class: "estreito" }, cabecalho("Editar tarefa", null, { voltar }), form, duplicar, acoes));
   });
 }
 

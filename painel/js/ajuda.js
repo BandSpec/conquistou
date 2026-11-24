@@ -74,6 +74,16 @@ export const TOPICOS_SITE = [
         ],
       },
       {
+        pergunta: "Como duplicar uma tarefa para outro filho?",
+        passos: [
+          "Abra a aba Tarefas, escolha o filho e clique na tarefa.",
+          "Em \"Duplicar para outro filho\", escolha o nome do outro filho.",
+          "Confirme. A cópia começa hoje, com o mesmo valor, horário, provas e imagem.",
+          "Ajuste o que quiser na lista de tarefas dele.",
+        ],
+        dica: "Só dá para duplicar se o outro filho ganha o que a tarefa rende (dinheiro ou tempo de tela).",
+      },
+      {
         pergunta: "Como editar, pausar ou excluir uma tarefa?",
         passos: [
           "Abra a aba Tarefas, escolha o filho e clique na tarefa.",
