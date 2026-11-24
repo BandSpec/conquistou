@@ -252,6 +252,12 @@ export const auth = {
     }
   },
   // senha: obrigatória para quem entra com e-mail e senha (quem entra pelo Google não tem)
+  // senha e segurança (iguais às do app)
+  seguranca: () => get("/api/auth/seguranca"),
+  trocarSenha: (senhaAtual, novaSenha) => post("/api/auth/trocar-senha", { senhaAtual, novaSenha, refreshTokenAtual: sessao?.refreshToken }, { padrao: "Não foi possível trocar a senha." }),
+  sairDeTodos: () => post("/api/auth/sair-de-todos"),
+  enviarCodigoEmail: () => post("/api/auth/email/enviar-codigo"),
+  confirmarEmail: (codigo) => post("/api/auth/email/confirmar", { codigo }, { padrao: "Código inválido ou vencido. Peça um novo." }),
   excluirFamilia: (confirmacao, senha) => post("/api/familia/excluir", { confirmacao, senha: senha || undefined }),
 };
 
@@ -298,6 +304,7 @@ export const api = {
   movimentacoesMeta: (id) => get(`/api/metas/${id}/movimentacoes`),
 
   perfil: () => get("/api/perfil"),
+  assinatura: () => get("/api/assinatura"),
 
   // pai e mãe na mesma família (só o titular convida e remove)
   responsaveis: () => get("/api/familia/responsaveis"),

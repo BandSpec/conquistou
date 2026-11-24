@@ -74,6 +74,16 @@ export const TOPICOS_SITE = [
         ],
       },
       {
+        pergunta: "Como duplicar uma tarefa para outro filho?",
+        passos: [
+          "Abra a aba Tarefas, escolha o filho e clique na tarefa.",
+          "Em \"Duplicar para outro filho\", escolha o nome do outro filho.",
+          "Confirme. A cópia começa hoje, com o mesmo valor, horário, provas e imagem.",
+          "Ajuste o que quiser na lista de tarefas dele.",
+        ],
+        dica: "Só dá para duplicar se o outro filho ganha o que a tarefa rende (dinheiro ou tempo de tela).",
+      },
+      {
         pergunta: "Como editar, pausar ou excluir uma tarefa?",
         passos: [
           "Abra a aba Tarefas, escolha o filho e clique na tarefa.",
@@ -199,6 +209,19 @@ export const TOPICOS_SITE = [
         ],
       },
       {
+        pergunta: "Como ver o plano da família?",
+        passos: ["Clique na sua foto, no alto da página.", "Clique em \"Minha assinatura\".", "Você vê o plano, até quando vale e o que ele permite (filhos, tarefas e tempo de tela)."],
+      },
+      {
+        pergunta: "Como trocar a senha ou sair de todos os aparelhos?",
+        passos: [
+          "Clique na sua foto e depois em \"Senha e segurança\".",
+          "Para trocar a senha, preencha a senha atual, a nova senha e repita a nova. Clique em \"Trocar a senha\".",
+          "Se perdeu um celular, clique em \"Sair de todos os aparelhos\".",
+          "Ali também dá para confirmar o seu e-mail: o código chega por e-mail.",
+        ],
+      },
+      {
         pergunta: "Esqueci a senha. O que faço?",
         passos: [
           "Na tela de entrar, clique em \"Esqueci a senha\".",
@@ -248,10 +271,11 @@ export const TOPICOS_SITE = [
         ],
       },
       {
-        pergunta: "Como ver ou assinar um plano, ou trocar a senha?",
+        pergunta: "Como assinar ou trocar de plano?",
         passos: [
-          "No app, abra o seu Perfil.",
-          "Toque em \"Minha assinatura\" para ver ou assinar um plano, ou em \"Senha e segurança\" para trocar a senha.",
+          "No app, abra o seu Perfil e toque em \"Minha assinatura\".",
+          "Escolha o plano e toque em \"Testar 7 dias grátis\". A cobrança é feita pelo Google Play.",
+          "Aqui no site você só vê o plano (Perfil > Minha assinatura); assinar e usar cupom de desconto é só pelo app.",
         ],
       },
     ],

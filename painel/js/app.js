@@ -36,6 +36,8 @@ const ROTAS = [
   ["/perfil", telas.telaPerfil, null],
   ["/responsaveis", telas.telaResponsaveis, null],
   ["/ajuda", telas.telaAjuda, null],
+  ["/assinatura", telas.telaAssinatura, null],
+  ["/seguranca", telas.telaSeguranca, null],
   ["/excluir-conta", telas.telaExcluirConta, null],
 ];
 
@@ -65,11 +67,14 @@ function mostrarBarra(abaAtiva, pendentes) {
     h("a", { href, "aria-current": id === abaAtiva ? "page" : null }, icone(ic), h("span", {}, texto),
       id === "aprovacoes" && pendentes > 0 ? h("span", { class: "contador", "aria-label": `${pendentes} pendentes` }, String(pendentes)) : null)));
   trocar(barraAcoes,
-    h("a", { class: "botao-redondo", href: "#/ajuda", title: "Ajuda", "aria-label": "Ajuda" }, icone("ajuda")),
+    // no computador a barra vira um menu lateral e estes botões ganham o texto (.rotulo-acao); no celular ficam só os ícones
+    h("a", { class: "botao-redondo", href: "#/ajuda", title: "Ajuda", "aria-label": "Ajuda" }, icone("ajuda"), h("span", { class: "rotulo-acao" }, "Ajuda")),
     // a foto (ou avatar) do responsável abre o Perfil; antes só havia um ícone genérico
-    h("a", { class: "botao-redondo foto-perfil", href: "#/perfil", title: "Meu perfil", "aria-label": "Meu perfil" }, avatar(perfilGuardado.dados?.nome ?? sessaoAtual()?.nome ?? "?", perfilGuardado.dados?.fotoUrl, 36)),
-    h("button", { type: "button", class: "botao-redondo", title: "Sair", "aria-label": "Sair", onclick: sair }, icone("sair")));
+    h("a", { class: "botao-redondo foto-perfil", href: "#/perfil", title: "Meu perfil", "aria-label": "Meu perfil" }, avatar(perfilGuardado.dados?.nome ?? sessaoAtual()?.nome ?? "?", perfilGuardado.dados?.fotoUrl, 36), h("span", { class: "rotulo-acao" }, h("b", {}, primeiroNomeBarra()), h("small", {}, "Meu perfil"))),
+    h("button", { type: "button", class: "botao-redondo", title: "Sair", "aria-label": "Sair", onclick: sair }, icone("sair"), h("span", { class: "rotulo-acao" }, "Sair")));
 }
+
+const primeiroNomeBarra = () => String(perfilGuardado.dados?.nome ?? sessaoAtual()?.nome ?? "Responsável").split(" ")[0];
 
 function esconderBarra() {
   barra.hidden = true;
@@ -100,7 +105,13 @@ async function sair() {
 // ---------- telas de entrada ----------
 function telaEntrada(...conteudo) {
   esconderBarra();
-  trocar(main, h("div", { class: "entrada-fundo" }, h("div", { class: "cartao entrada-cartao" },
+  trocar(main, h("div", { class: "entrada-fundo" },
+    h("aside", { class: "entrada-marca", "aria-hidden": "true" },
+      h("img", { src: "../img/icone-180.png", alt: "", width: 72, height: 72 }),
+      h("h2", {}, "Tarefas, mesada e conquistas da família"),
+      h("p", {}, "Acompanhe tudo pelo computador: aprove tarefas, pague a mesada e veja o que cada filho está conquistando."),
+      h("ul", {}, h("li", {}, "Aprovações com foto, áudio e vídeo"), h("li", {}, "Pai e mãe na mesma família"), h("li", {}, "Metas e mesada por PIX"))),
+    h("div", { class: "cartao entrada-cartao" },
     h("a", { class: "marca", href: "../" }, h("img", { src: "../img/icone-180.png", alt: "", width: 44, height: 44 }), h("span", {}, "Conquistou")),
     ...conteudo)));
 }

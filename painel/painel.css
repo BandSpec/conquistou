@@ -338,4 +338,64 @@ dialog::backdrop { background: var(--fundo-modal); }
 .pagina-afiliado main { max-width: 860px; }
 .afiliado-corpo .resumos { max-width: none; }
 .afiliado-corpo input[type="text"] { width: 100%; padding: 12px 14px; border: 1px solid var(--borda); border-radius: 14px; background: var(--card); }
+
+/* ---------- no computador: menu lateral e página larga, como um sistema (a partir de 1024px) ----------
+   No celular e no tablet continua como antes (barra no topo e abas embaixo); a escolha é só pela largura da janela. */
+.rotulo-acao { display: none; }
+.entrada-marca { display: none; }
+@media (min-width: 1024px) {
+  body.com-abas { padding-left: 272px; }
+  .barra {
+    position: fixed; left: 0; top: 0; bottom: 0; width: 272px; z-index: 30; border-bottom: 0; border-right: 1px solid rgba(255, 255, 255, 0.08);
+    background: linear-gradient(180deg, #1B3FC4 0%, #12288F 60%, #0E1F6B 100%); backdrop-filter: none; overflow-y: auto;
+  }
+  .barra-dentro { max-width: none; height: 100%; flex-direction: column; align-items: stretch; gap: 8px; padding: 22px 16px 18px; }
+  .barra .marca { color: #fff; padding: 4px 8px 18px; }
+  .barra .marca span { font-size: 1.5rem; }
+  .abas { flex: 1; flex-direction: column; gap: 4px; }
+  .abas a { color: rgba(255, 255, 255, 0.78); padding: 12px 14px; font-size: 0.98rem; border-radius: 14px; }
+  .abas a:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+  .abas a[aria-current="page"] { background: #fff; color: var(--indigo-deep); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18); }
+  .abas svg { width: 20px; height: 20px; }
+  .abas .contador { margin-left: auto; }
+  .barra-acoes { flex-direction: column; align-items: stretch; gap: 4px; border-top: 1px solid rgba(255, 255, 255, 0.14); padding-top: 14px; }
+  .barra-acoes .botao-redondo {
+    width: auto; height: auto; justify-content: flex-start; gap: 12px; padding: 10px 12px; border-radius: 14px; border: 0; background: transparent;
+    color: rgba(255, 255, 255, 0.85); box-shadow: none; font-weight: 700; text-align: left;
+  }
+  .barra-acoes .botao-redondo:hover { background: rgba(255, 255, 255, 0.12); color: #fff; }
+  .barra-acoes .botao-redondo.foto-perfil { border-radius: 14px; overflow: visible; }
+  .barra-acoes .botao-redondo.foto-perfil .avatar { width: 38px; height: 38px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); }
+  .rotulo-acao { display: grid; line-height: 1.2; }
+  .rotulo-acao small { font-weight: 500; opacity: 0.75; font-size: 0.78rem; }
+  .barra-acoes .botao-redondo svg { width: 20px; height: 20px; }
+
+  main { max-width: 1240px; padding: 36px 48px 64px; }
+  .estreito { max-width: 780px; margin: 0; }
+  .titulo { font-size: 2.4rem; }
+  .saudacao .titulo { font-size: 2.6rem; }
+  .cabecalho-pagina { margin-bottom: 26px; }
+  .cartao { padding: 22px; border-radius: 24px; }
+  .grade { grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr)); gap: 18px; }
+  .resumos { gap: 20px; max-width: 760px; }
+  .avisos { bottom: 24px; }
+  .abas ~ .barra-acoes { margin-top: auto; }
+  /* a entrada (login) ganha um painel de marca ao lado do cartão */
+  .entrada-fundo { justify-content: stretch; padding: 0; gap: 0; background: var(--bg0); }
+  .entrada-marca {
+    display: flex; flex-direction: column; justify-content: center; gap: 18px; flex: 1.1; min-height: 100vh; padding: 64px 72px; color: #fff;
+    background: radial-gradient(circle at 20% 10%, rgba(122, 47, 240, 0.55), transparent 55%), linear-gradient(135deg, #1B3FC4 0%, #2F66FF 55%, #2F8BFF 100%);
+  }
+  .entrada-marca img { border-radius: 20px; }
+  .entrada-marca h2 { font-size: 2.8rem; max-width: 520px; }
+  .entrada-marca p { font-size: 1.1rem; max-width: 480px; margin: 0; opacity: 0.92; }
+  .entrada-marca ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; font-weight: 700; }
+  .entrada-marca li::before { content: "✓"; display: inline-grid; place-items: center; width: 24px; height: 24px; margin-right: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.22); }
+  .entrada-fundo > .entrada-cartao { flex: 0 0 min(560px, 46vw); max-width: none; align-self: center; margin: 32px auto; border: 0; box-shadow: none; background: transparent; padding: 24px 48px; }
+}
+@media (min-width: 1500px) {
+  main { max-width: 1400px; }
+  .grade { grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr)); }
+}
+
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

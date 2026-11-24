@@ -9,6 +9,7 @@ import {
 } from "./ui.js";
 import { criarQr } from "./qrcode.js";
 import { ir } from "./rotas.js";
+import { copiaDaTarefa, destinosDaCopia, recompensaCompativel } from "./duplicar.js";
 import { montarPrazo, horasDaJanela, fimDaJanela, resumoDaTarefa, SUGESTOES_TAREFA } from "./prazo.js";
 import { TOPICOS_SITE, filtrarTopicos } from "./ajuda.js";
 
@@ -648,7 +649,7 @@ export function telaNovaTarefa(main, { filhoId }) {
 }
 
 export function telaEditarTarefa(main, { filhoId, tarefaId }) {
-  carregar(main, () => api.tarefa(filhoId, tarefaId), (t) => {
+  carregar(main, () => Promise.all([api.tarefa(filhoId, tarefaId), api.filhos()]), ([t, todosFilhos]) => {
     const voltar = `#/tarefas?filho=${filhoId}`;
     let comprovacao = t.tiposComprovacaoAceitos;
     const imagem = { valor: t.imagemUrl, enviando: false };
@@ -712,7 +713,27 @@ export function telaEditarTarefa(main, { filhoId, tarefaId }) {
         });
       }, { classe: "texto", vars: { "--cor": "var(--danger-txt)" } })
     );
-    trocar(main, h("div", { class: "estreito" }, cabecalho("Editar tarefa", null, { voltar }), form, acoes));
+    // duplicar para outro filho: cria uma cópia que começa hoje, com o mesmo valor, horário e provas
+    const destinos = destinosDaCopia(todosFilhos, filhoId);
+    const duplicar = destinos.length === 0 ? null : h("div", { class: "cartao pilha" },
+      h("span", { class: "rotulo" }, "Duplicar para outro filho"),
+      h("small", { class: "dica" }, "Cria uma cópia desta tarefa para o filho escolhido, começando hoje."),
+      h("div", { class: "chips", role: "group", "aria-label": "Duplicar para", style: { marginBottom: 0 } }, destinos.map((f) =>
+        chip(f.nome, false, async (ev) => {
+          const btn = ev.currentTarget;
+          if (!recompensaCompativel(t, f)) return avisar(f.nome + " ganha " + (f.tipoRecompensa === "TempoDeTela" ? "minutos de tela" : "dinheiro") + ", e esta tarefa não rende isso. Crie uma tarefa nova para " + f.nome + ".", { erro: true });
+          const ok = await confirmar("Duplicar tarefa", "Criar \"" + t.titulo + "\" para " + f.nome + ", começando hoje, com o mesmo valor, horário e provas?", { sim: "Duplicar" });
+          if (!ok) return;
+          comCarregando(btn, async () => {
+            try {
+              await api.criarTarefa(f.usuarioId, copiaDaTarefa(t, dataIso(new Date())));
+              avisar("Tarefa duplicada para " + f.nome + ".");
+            } catch (err) {
+              avisar(mensagemDeErro(err), { erro: true });
+            }
+          });
+        }, { vars: varsTema(f.genero), antes: avatar(f.nome, f.fotoUrl, 22) }))));
+    trocar(main, h("div", { class: "estreito" }, cabecalho("Editar tarefa", null, { voltar }), form, duplicar, acoes));
   });
 }
 
@@ -1222,7 +1243,9 @@ export function telaPerfil(main, _p, _b, { sair }) {
       h("div", { class: "cartao pilha" }, topo, abrirFoto, areaFoto),
       h("div", { class: "secao" }, "Conta da família"),
       h("div", { class: "cartao lista-links" },
+        h("a", { href: "#/assinatura" }, icone("etiqueta"), h("span", { class: "espaco" }, "Minha assinatura"), icone("direita")),
         h("a", { href: "#/responsaveis" }, icone("usuarios"), h("span", { class: "espaco" }, "Responsáveis da família"), icone("direita")),
+        h("a", { href: "#/seguranca" }, icone("escudo"), h("span", { class: "espaco" }, "Senha e segurança"), icone("direita")),
         h("a", { href: "#/ajuda" }, icone("ajuda"), h("span", { class: "espaco" }, "Ajuda"), icone("direita")),
         h("a", { href: "../termos.html", target: "_blank", rel: "noopener" }, icone("arquivo"), h("span", { class: "espaco" }, "Termos de Uso"), icone("direita")),
         h("a", { href: "../privacidade.html", target: "_blank", rel: "noopener" }, icone("escudo"), h("span", { class: "espaco" }, "Política de Privacidade"), icone("direita")),
@@ -1340,6 +1363,144 @@ export function telaCupons(main) {
       form));
   });
 }
+
+// ======================================================================
+// MINHA ASSINATURA (só para ver; a compra e a troca de plano são pelo app, com o Google Play)
+// ======================================================================
+const NOME_PLANO = { Gratis: "Grátis", Familia: "Família", FamiliaMais: "Família+" };
+const GERENCIAR_NO_PLAY = "https://play.google.com/store/account/subscriptions?package=com.bandspecs.combinado";
+
+function situacaoDaAssinatura(a) {
+  const ate = a.assinaturaAte ? new Date(a.assinaturaAte).toLocaleDateString("pt-BR") : null;
+  if (a.planoEfetivo === "Gratis") return "Você está no plano grátis.";
+  if (a.cortesia) return "Plano de cortesia, sem cobrança.";
+  if (a.porCupom) return "Liberado por cupom, sem cobrança, até " + ate + ". Depois, assine para continuar.";
+  if (a.emTeste) return "Teste grátis até " + ate + ". Depois a assinatura começa sozinha, se não cancelar.";
+  if (a.estado === "Cancelada") return "Renovação cancelada. O plano vale até " + ate + ".";
+  if (a.estado === "EmCarencia") return "O Google Play não conseguiu cobrar. Confira a forma de pagamento para não perder o plano.";
+  return "Renova sozinho em " + ate + ".";
+}
+
+export function telaAssinatura(main) {
+  carregar(main, api.assinatura, (a) => {
+    const l = a.limites;
+    const pago = a.planoEfetivo !== "Gratis";
+    const linha = (ic, texto, desligado) => h("div", { class: "item", style: desligado ? { opacity: 0.55 } : null }, icone(ic), h("div", { class: "texto" }, texto));
+    trocar(main, h("div", { class: "estreito" },
+      cabecalho("Minha assinatura", "O plano da família", { voltar: "#/perfil" }),
+      h("div", { class: "cartao pilha" },
+        h("span", { class: "rotulo" }, "PLANO"),
+        h("div", { class: "titulo", style: { fontSize: "1.8rem" } }, NOME_PLANO[a.planoEfetivo] ?? a.planoEfetivo),
+        h("p", { style: { margin: 0 } }, situacaoDaAssinatura(a))),
+      h("div", { class: "secao" }, "O que seu plano permite"),
+      h("div", { class: "cartao pilha" },
+        linha("usuarios", "Filhos: " + a.filhosAtivos + " de " + l.maxFilhos),
+        linha("checkQuadrado", l.maxTarefasAtivasPorFilho === null ? "Tarefas sem limite" : l.maxTarefasAtivasPorFilho + " tarefa ativa por filho"),
+        linha("celular", l.tempoTela ? "Tempo de tela liberado" : "Sem tempo de tela", !l.tempoTela)),
+      a.filhosPausados > 0
+        ? aviso((a.filhosPausados === 1 ? "1 filho está pausado" : a.filhosPausados + " filhos estão pausados") + " porque passou do limite do plano. Nada foi apagado: volta tudo ao assinar.")
+        : null,
+      aviso("Para assinar, trocar de plano ou usar um cupom de desconto, abra o app Conquistou no celular: a cobrança é feita pelo Google Play."),
+      pago && !a.cortesia && !a.porCupom
+        ? h("div", { class: "botoes", style: { marginTop: "14px" } }, h("a", { class: "botao secundario", href: GERENCIAR_NO_PLAY, target: "_blank", rel: "noopener" }, icone("link"), "Gerenciar no Google Play"))
+        : null));
+  });
+}
+
+// ======================================================================
+// SENHA E SEGURANÇA (igual ao app)
+// ======================================================================
+export function telaSeguranca(main) {
+  carregar(main, auth_seguranca, (seg) => {
+    const erroSenha = erroForm();
+    const atual = h("input", { type: "password", autocomplete: "current-password", placeholder: "Sua senha de hoje" });
+    const nova = h("input", { type: "password", autocomplete: "new-password", placeholder: "Mínimo 8 caracteres" });
+    const repetir = h("input", { type: "password", autocomplete: "new-password", placeholder: "Repita a senha nova" });
+    const formSenha = h("form", { class: "cartao pilha", novalidate: true },
+      h("span", { class: "rotulo" }, "Trocar a senha"),
+      campo("Senha atual", atual), campo("Nova senha", nova), campo("Repita a nova senha", repetir), erroSenha,
+      botao("Trocar a senha", null, { tipo: "submit" }));
+    formSenha.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      if (!atual.value) return mostrarErro(erroSenha, "Informe a senha atual.");
+      if (nova.value.length < 8) return mostrarErro(erroSenha, "A nova senha precisa ter pelo menos 8 caracteres.");
+      if (nova.value !== repetir.value) return mostrarErro(erroSenha, "As duas senhas novas estão diferentes.");
+      mostrarErro(erroSenha, null);
+      comCarregando(enviador(ev), async () => {
+        try {
+          await auth.trocarSenha(atual.value, nova.value);
+          atual.value = nova.value = repetir.value = "";
+          avisar("Senha trocada. Os outros aparelhos vão pedir a senha nova.");
+        } catch (e) {
+          mostrarErro(erroSenha, mensagemDeErro(e, "Não foi possível trocar a senha."));
+        }
+      });
+    });
+
+    const semSenha = h("div", { class: "cartao pilha" }, h("span", { class: "rotulo" }, "Trocar a senha"),
+      h("p", { style: { margin: 0 } }, "Esta conta entra pelo Google e não tem senha. Para entrar de outro jeito, use o Google."));
+
+    // confirmar o e-mail (o código chega por e-mail)
+    const codigo = h("input", { type: "text", inputmode: "numeric", autocomplete: "one-time-code", placeholder: "6 números", maxlength: 6 });
+    const erroEmail = erroForm();
+    const areaCodigo = h("div", { class: "pilha", hidden: true }, campo("Código", codigo), erroEmail, botao("Confirmar o e-mail", null, { tipo: "submit" }));
+    const enviarCodigo = botao("Enviar o código para o meu e-mail", (ev) => comCarregando(ev.currentTarget, async () => {
+      try {
+        await auth.enviarCodigoEmail();
+        areaCodigo.hidden = false;
+        avisar("Código enviado. Veja o e-mail (e a caixa de spam). Ele vale por 15 minutos.");
+        codigo.focus();
+      } catch (e) {
+        avisar(mensagemDeErro(e), { erro: true });
+      }
+    }), { classe: "secundario" });
+    const formEmail = h("form", { class: "pilha", novalidate: true }, enviarCodigo, areaCodigo);
+    formEmail.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      if (!/^\d{6}$/.test(codigo.value.trim())) return mostrarErro(erroEmail, "O código tem 6 números.");
+      mostrarErro(erroEmail, null);
+      comCarregando(enviador(ev), async () => {
+        try {
+          await auth.confirmarEmail(codigo.value.trim());
+          avisar("E-mail confirmado.");
+          telaSeguranca(main);
+        } catch (e) {
+          mostrarErro(erroEmail, mensagemDeErro(e, "Código inválido ou vencido."));
+        }
+      });
+    });
+    const cartaoEmail = h("div", { class: "cartao pilha" },
+      h("span", { class: "rotulo" }, "E-mail da conta"),
+      h("div", { class: "item" }, icone(seg.emailConfirmado ? "check" : "alerta"), h("div", { class: "texto" },
+        h("div", { class: "titulo-item" }, seg.email ?? "Sem e-mail"),
+        h("div", { class: "meta" }, seg.emailConfirmado ? "E-mail confirmado" : "E-mail ainda não confirmado"))),
+      !seg.emailConfirmado && seg.email && seg.emailAtivo ? formEmail : null);
+
+    const sairTodos = botao("Sair de todos os aparelhos", async (ev) => {
+      const btn = ev.currentTarget;
+      const ok = await confirmar("Sair de todos os aparelhos?", "A sua conta é desconectada em todos os celulares e navegadores, inclusive neste. Depois é só entrar de novo.", { sim: "Sair de todos", perigo: true });
+      if (!ok) return;
+      comCarregando(btn, async () => {
+        try {
+          await auth.sairDeTodos();
+          limparSessao();
+          avisar("Você saiu de todos os aparelhos.");
+          ir("/entrar", { substituir: true });
+        } catch (e) {
+          avisar(mensagemDeErro(e), { erro: true });
+        }
+      });
+    }, { classe: "perigo", iconeNome: "sair" });
+
+    trocar(main, h("div", { class: "estreito" },
+      cabecalho("Senha e segurança", "Cuide do acesso à conta da família", { voltar: "#/perfil" }),
+      cartaoEmail,
+      seg.temSenha ? formSenha : semSenha,
+      h("div", { class: "cartao pilha" }, h("span", { class: "rotulo" }, "Perdeu um celular ou acha que alguém entrou?"),
+        h("small", { class: "dica" }, "Desconecta a conta em todos os aparelhos."), sairTodos)));
+  });
+}
+const auth_seguranca = () => auth.seguranca();
 
 // ======================================================================
 // AFILIADOS (só o administrador)
