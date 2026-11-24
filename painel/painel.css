@@ -332,4 +332,10 @@ dialog::backdrop { background: var(--fundo-modal); }
 .ajuda-passos ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; line-height: 1.5; }
 .ajuda-dica { display: flex; gap: 8px; align-items: flex-start; background: var(--indigo-soft); border-radius: 14px; padding: 10px 12px; margin: 12px 0 0; font-size: 0.9rem; }
 .ajuda-dica svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: var(--indigo-txt); }
+
+/* ---------- painel do afiliado (conquistou.com.br/afiliado/) ---------- */
+.topo-afiliado { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 20px; background: var(--card); border-bottom: 1px solid var(--borda); }
+.pagina-afiliado main { max-width: 860px; }
+.afiliado-corpo .resumos { max-width: none; }
+.afiliado-corpo input[type="text"] { width: 100%; padding: 12px 14px; border: 1px solid var(--borda); border-radius: 14px; background: var(--card); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
