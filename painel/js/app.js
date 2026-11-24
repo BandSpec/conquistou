@@ -35,6 +35,8 @@ const ROTAS = [
   ["/perfil", telas.telaPerfil, null],
   ["/responsaveis", telas.telaResponsaveis, null],
   ["/ajuda", telas.telaAjuda, null],
+  ["/assinatura", telas.telaAssinatura, null],
+  ["/seguranca", telas.telaSeguranca, null],
   ["/excluir-conta", telas.telaExcluirConta, null],
 ];
 
