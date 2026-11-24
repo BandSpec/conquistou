@@ -1,7 +1,7 @@
 // As telas do responsável, uma função por tela (mesmas regras do app: mobile/src/screens/responsavel e shared).
 // Cada função recebe o <main> e os parâmetros da rota e desenha a tela nele.
 
-import { api, auth, enviarFoto, mensagemDeErro, sessaoAtual, limparSessao } from "./api.js";
+import { api, auth, enviarFoto, mensagemDeErro, sessaoAtual, limparSessao, carregarPerfilGuardado, perfilGuardado } from "./api.js";
 import {
   h, trocar, icone, formatarReais, lerReais, dataIso, dataCurta, tempoRelativo, primeiroNome,
   temaDoGenero, varsTema, avatar, imagemTarefa, barraProgresso, botao, comCarregando, chip, segmentos,
@@ -9,6 +9,8 @@ import {
 } from "./ui.js";
 import { criarQr } from "./qrcode.js";
 import { ir } from "./rotas.js";
+import { montarPrazo, horasDaJanela, fimDaJanela, resumoDaTarefa, SUGESTOES_TAREFA } from "./prazo.js";
+import { TOPICOS_SITE, filtrarTopicos } from "./ajuda.js";
 
 // ---------- pedaços comuns ----------
 function cabecalho(titulo, subtitulo, { voltar, direita } = {}) {
@@ -63,6 +65,7 @@ export function telaPainel(main) {
     const nome = primeiroNome(sessaoAtual()?.nome);
     trocar(main,
       h("div", { class: "saudacao" },
+        h("a", { href: "#/perfil", class: "foto-saudacao", "aria-label": "Meu perfil" }, avatar(sessaoAtual()?.nome ?? "?", perfilGuardado.dados?.fotoUrl, 56)),
         h("div", { style: { flex: 1 } }, h("p", { class: "subtitulo", style: { margin: 0 } }, "Central da família"), h("h1", { class: "titulo" }, `Olá, ${nome}`))
       ),
       h("div", { class: "resumos" },
@@ -430,6 +433,7 @@ function seletorImagem(estado, { rotulo = "Imagem da tarefa (opcional)", dica, m
     }
   });
   desenhar();
+  raiz.redesenhar = desenhar; // para uma sugestão pronta trocar a imagem por fora
   return raiz;
 }
 
@@ -441,87 +445,204 @@ function chipsBits(opcoes, inicial, aoMudar, rotulo) {
   return grupo;
 }
 
-const horaAgora = () => { const d = new Date(); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+/** Escolha única entre opções (chips). Devolve o grupo; grupo.escolher(v) muda de fora. */
+function chipsUnicos(opcoes, inicial, aoMudar, rotulo) {
+  let valor = inicial;
+  const grupo = h("div", { class: "chips", role: "group", "aria-label": rotulo, style: { marginBottom: 0 } });
+  const desenhar = () => trocar(grupo, opcoes.map(([v, r]) => chip(r, v === valor, () => { valor = v; desenhar(); aoMudar(v); })));
+  grupo.escolher = (v) => { valor = v; desenhar(); };
+  desenhar();
+  return grupo;
+}
 
+const ATALHOS_MINUTOS = [15, 30, 45, 60];
+const ATALHOS_DIAS = [1, 2, 3, 5, 7];
+const ATALHOS_HORAS_JANELA = [2, 3, 4, 6, 8];
+
+// A tela pergunta "O quê / Quando / Prova" em português simples e termina com uma frase-resumo (igual ao app).
+// "Até quando" tem 3 escolhas (até um horário, numa janela, alguns dias); a conversão para os modos do servidor
+// está em prazo.js. O horário de abrir NÃO nasce mais com a hora em que a tarefa foi criada.
 export function telaNovaTarefa(main, { filhoId }) {
   carregar(main, api.filhos, (filhos) => {
     const filho = filhos.find((f) => f.usuarioId === filhoId);
     if (!filho) return trocar(main, cartaoVazio("Filho não encontrado."));
-    const e = { frequencia: "Diaria", dias: 0, prazoTipo: "JanelaHoras", comprovacao: 1 };
+    const tipoRecompensa = filho.tipoRecompensa ?? "Dinheiro";
+    const aceitaDinheiro = tipoRecompensa !== "TempoDeTela";
+    const aceitaTempo = tipoRecompensa !== "Dinheiro";
+    const e = { frequencia: "Diaria", dias: 0, quando: "AteHorario", janelaHoras: 4, diasPrazo: 3, comprovacao: 1, minutos: 0 };
     const imagem = { valor: null, enviando: false };
+
     const titulo = h("input", { type: "text", placeholder: "ex: Arrumar a cama", maxlength: 200, required: true });
     const valor = entradaValor();
     const dataInicio = h("input", { type: "date", value: dataIso(new Date()) });
-    const prazoHorario = h("input", { type: "time", value: "20:00" });
-    const horarioInicio = h("input", { type: "time", value: horaAgora() });
-    const quantidade = h("input", { type: "number", min: 1, step: 1, value: 6, inputmode: "numeric" });
-    const dias = chipsBits(DIAS, 0, (v) => (e.dias = v), "Dias da semana");
-    const areaDias = h("div", { hidden: true }, dias);
-    const rotuloQuantidade = h("span", {}, "Quantas horas depois de disponível");
-    const areaFixo = campo("Até que horas", prazoHorario);
-    const areaJanela = h("div", { class: "dupla" }, campo("Disponível a partir de", horarioInicio), h("label", { class: "campo" }, rotuloQuantidade, quantidade));
-    areaFixo.hidden = true;
+    const ateHorario = h("input", { type: "time", value: "20:00" });
+    const janelaInicio = h("input", { type: "time", value: "08:00" });
+    const janelaFim = h("input", { type: "time", value: "12:00" });
+    const minutosOutro = h("input", { type: "number", min: 1, max: 1440, step: 1, inputmode: "numeric", placeholder: "ex: 20" });
     const erro = erroForm();
+    const resumo = h("p", { class: "texto-resumo" });
+
+    const atualizarResumo = () => {
+      const entrada = {
+        nomeDoFilho: filho.nome,
+        frequencia: e.frequencia,
+        diasDaSemana: e.dias,
+        dataInicio: dataInicio.value,
+        quando: e.quando,
+        ateHorario: ateHorario.value || "20:00",
+        janelaInicio: janelaInicio.value || "08:00",
+        janelaHoras: e.janelaHoras,
+        dias: e.diasPrazo,
+        valor: aceitaDinheiro ? (lerReais(valor.value) || 0) : 0,
+        minutos: aceitaTempo ? e.minutos : 0,
+        tiposComprovacao: e.comprovacao,
+      };
+      resumo.textContent = resumoDaTarefa(entrada);
+    };
+
+    // ----- 1. O quê -----
+    const imagemEl = seletorImagem(imagem);
+    const sugestoes = h("div", { class: "sugestoes", role: "group", "aria-label": "Sugestões rápidas" }, SUGESTOES_TAREFA.map((s) =>
+      chip(s.titulo, false, () => {
+        titulo.value = s.titulo;
+        imagem.valor = "icone:" + s.iconeId;
+        imagemEl.redesenhar();
+        e.frequencia = "Diaria";
+        e.quando = "AteHorario";
+        ateHorario.value = s.ateHora;
+        areaDias.hidden = true;
+        frequenciaEl.escolher("Diaria");
+        quandoEl.escolher("AteHorario");
+        mostrarArea();
+        posicionarData();
+        atualizarResumo();
+      }, { antes: h("img", { src: "img/icones-tarefa/" + s.iconeId + ".png", alt: "", width: 20, height: 20 }) })));
+
+    const minutosChips = chipsUnicos(ATALHOS_MINUTOS.map((m) => [m, m + " min"]), 0, (m) => { e.minutos = m; minutosOutro.value = ""; atualizarResumo(); }, "Minutos de tela");
+    minutosOutro.addEventListener("input", () => {
+      e.minutos = Math.min(1440, Number(minutosOutro.value) || 0);
+      minutosChips.escolher(ATALHOS_MINUTOS.includes(e.minutos) ? e.minutos : 0);
+      atualizarResumo();
+    });
+
+    // ----- 2. Quando -----
+    const dias = chipsBits(DIAS, 0, (v) => { e.dias = v; atualizarResumo(); }, "Dias da semana");
+    const areaDias = h("div", { class: "campo", hidden: true }, h("span", {}, "Em quais dias?"), dias);
+    const frequenciaEl = segmentos([["Diaria", "Todo dia"], ["DiasDaSemana", "Dias da semana"], ["Unica", "Uma vez"]], e.frequencia, (v) => {
+      e.frequencia = v;
+      areaDias.hidden = v !== "DiasDaSemana";
+      posicionarData();
+      atualizarResumo();
+    }, "Frequência");
+
+    // a data de início fica em "Em que dia?" (uma vez só) ou em "Mais opções" (repete)
+    const rotuloData = h("span", {}, "Em que dia?");
+    const campoData = h("label", { class: "campo" }, rotuloData, dataInicio);
+    const lugarData = h("div", {});
+    const maisOpcoes = h("details", { class: "mais-opcoes" }, h("summary", {}, "Mais opções"), h("div", { class: "campo-mais" }));
+    const posicionarData = () => {
+      const unica = e.frequencia === "Unica";
+      rotuloData.textContent = unica ? "Em que dia?" : "Começa em";
+      (unica ? lugarData : maisOpcoes.lastChild).append(campoData);
+      maisOpcoes.hidden = unica;
+    };
+
+    const quandoEl = segmentos([["AteHorario", "Até um horário"], ["Janela", "Numa janela"], ["AlgunsDias", "Alguns dias"]], e.quando, (v) => {
+      e.quando = v;
+      mostrarArea();
+      atualizarResumo();
+    }, "Até quando");
+
+    const horasChips = chipsUnicos(ATALHOS_HORAS_JANELA.map((n) => [n, n + " h"]), 4, (n) => {
+      e.janelaHoras = n;
+      janelaFim.value = fimDaJanela(janelaInicio.value || "08:00", n);
+      atualizarResumo();
+    }, "Horas abertas");
+    janelaInicio.addEventListener("input", () => { janelaFim.value = fimDaJanela(janelaInicio.value || "08:00", e.janelaHoras); atualizarResumo(); });
+    janelaFim.addEventListener("input", () => {
+      e.janelaHoras = horasDaJanela(janelaInicio.value || "08:00", janelaFim.value || "12:00");
+      janelaFim.value = fimDaJanela(janelaInicio.value || "08:00", e.janelaHoras); // só horas inteiras: arredonda para cima
+      horasChips.escolher(ATALHOS_HORAS_JANELA.includes(e.janelaHoras) ? e.janelaHoras : 0);
+      atualizarResumo();
+    });
+    const diasChips = chipsUnicos(ATALHOS_DIAS.map((n) => [n, n === 1 ? "1 dia" : n + " dias"]), 3, (n) => { e.diasPrazo = n; atualizarResumo(); }, "Dias para fazer");
+
+    const areaAte = h("div", { class: "pilha" }, campo("Até que horas?", ateHorario),
+      h("small", { class: "dica" }, "A tarefa fica aberta o dia todo e fecha neste horário. Depois dele, não dá mais para enviar."));
+    const areaJanela = h("div", { class: "pilha", hidden: true },
+      h("div", { class: "dupla" }, campo("Abre às", janelaInicio), campo("Fecha às", janelaFim)),
+      h("div", { class: "campo" }, h("span", {}, "Ou escolha por quantas horas fica aberta"), horasChips),
+      h("small", { class: "dica" }, "Fora desse horário a tarefa não aparece para o filho. O tempo vale em horas inteiras."));
+    const areaDiasPrazo = h("div", { class: "campo", hidden: true }, h("span", {}, "Quantos dias para fazer?"), diasChips,
+      h("small", { class: "dica" }, "Boa para tarefa grande, como arrumar o quarto. Abre à meia-noite e o prazo conta a partir daí."));
+    const mostrarArea = () => {
+      areaAte.hidden = e.quando !== "AteHorario";
+      areaJanela.hidden = e.quando !== "Janela";
+      areaDiasPrazo.hidden = e.quando !== "AlgunsDias";
+    };
+    ateHorario.addEventListener("input", atualizarResumo);
+    dataInicio.addEventListener("input", atualizarResumo);
+    valor.addEventListener("input", atualizarResumo);
+
+    // ----- 3. Prova -----
+    const prova = chipsBits(COMPROVACOES, e.comprovacao, (v) => { e.comprovacao = v; atualizarResumo(); }, "Comprovação");
 
     const form = h("form", { class: "cartao", novalidate: true },
-      campo("Título", titulo),
-      seletorImagem(imagem),
-      campo("Valor (R$)", valor),
-      h("div", { class: "campo" }, h("span", {}, "Frequência"),
-        segmentos([["Diaria", "Todo dia"], ["DiasDaSemana", "Dias da semana"], ["Unica", "Uma vez"]], e.frequencia, (v) => { e.frequencia = v; areaDias.hidden = v !== "DiasDaSemana"; }, "Frequência")),
+      h("p", { class: "secao-form" }, "1. O quê?"),
+      h("div", { class: "campo" }, h("span", {}, "Sugestões rápidas"), sugestoes),
+      campo("Nome da tarefa", titulo),
+      imagemEl,
+      aceitaDinheiro ? campo(tipoRecompensa === "Ambos" ? "Quanto ganha (R$, opcional)" : "Quanto ganha (R$)", valor) : null,
+      aceitaTempo ? h("div", { class: "campo" }, h("span", {}, tipoRecompensa === "Ambos" ? "Minutos de tela (opcional)" : "Minutos de tela"), minutosChips,
+        campo("Outro valor (minutos)", minutosOutro)) : null,
+      h("p", { class: "secao-form" }, "2. Quando?"),
+      h("div", { class: "campo" }, h("span", {}, "Com que frequência?"), frequenciaEl),
       areaDias,
-      campo("Começa em", dataInicio),
-      h("div", { class: "campo" }, h("span", {}, "Prazo para concluir"),
-        segmentos([["JanelaHoras", "Horas depois"], ["JanelaDias", "Dias depois"], ["HorarioFixoNoDia", "Horário fixo"]], e.prazoTipo, (v) => {
-          e.prazoTipo = v;
-          areaFixo.hidden = v !== "HorarioFixoNoDia";
-          areaJanela.hidden = v === "HorarioFixoNoDia";
-          rotuloQuantidade.textContent = v === "JanelaDias" ? "Quantos dias depois de disponível" : "Quantas horas depois de disponível";
-          if (v === "JanelaDias" && quantidade.value === "6") quantidade.value = "2";
-        }, "Prazo")),
-      areaFixo,
-      areaJanela,
-      h("div", { class: "campo" }, h("span", {}, "Tipos de comprovação aceitos"),
-        h("small", { class: "dica" }, "O filho escolhe um desses para pedir aprovação. Se não marcar nenhum, a tarefa não exige comprovação."),
-        chipsBits(COMPROVACOES, e.comprovacao, (v) => (e.comprovacao = v), "Comprovação")),
+      lugarData,
+      h("div", { class: "campo" }, h("span", {}, "Até quando o filho pode fazer?"), quandoEl),
+      areaAte, areaJanela, areaDiasPrazo,
+      h("p", { class: "secao-form" }, "3. Prova"),
+      h("div", { class: "campo" }, h("span", {}, "Como o filho mostra que fez?"), prova,
+        h("small", { class: "dica" }, "Ele escolhe uma das provas marcadas e você aprova. Sem nenhuma marcada, ele só marca a tarefa como feita.")),
+      maisOpcoes,
+      h("div", { class: "resumo-tarefa", role: "status", "aria-label": "Resumo da tarefa" }, icone("check"), resumo),
       erro,
       botao("Criar tarefa", null, { tipo: "submit", classe: "largo" })
     );
     form.addEventListener("submit", (ev) => {
       ev.preventDefault();
-      const v = lerReais(valor.value);
-      const qtd = Number(quantidade.value);
-      if (!titulo.value.trim()) return mostrarErro(erro, "Dê um título para a tarefa.");
-      if (!(v > 0)) return mostrarErro(erro, "Informe um valor maior que zero (ex.: 2,50).");
+      const v = aceitaDinheiro ? lerReais(valor.value) : 0;
+      if (!titulo.value.trim()) return mostrarErro(erro, "Dê um nome para a tarefa.");
+      const recompensaOk = tipoRecompensa === "Dinheiro" ? v > 0 : tipoRecompensa === "TempoDeTela" ? e.minutos > 0 : v > 0 || e.minutos > 0;
+      if (!recompensaOk) return mostrarErro(erro, aceitaDinheiro ? "Informe quanto a tarefa rende (ex.: 2,50)." : "Escolha quantos minutos de tela a tarefa rende.");
       if (e.frequencia === "DiasDaSemana" && !e.dias) return mostrarErro(erro, "Marque pelo menos um dia da semana.");
-      if (e.prazoTipo !== "HorarioFixoNoDia" && !(qtd > 0)) return mostrarErro(erro, "Informe o prazo (número maior que zero).");
-      if (!dataInicio.value) return mostrarErro(erro, "Informe quando a tarefa começa.");
+      if (!dataInicio.value) return mostrarErro(erro, "Informe em que dia a tarefa começa.");
+      if (e.quando === "AteHorario" && !ateHorario.value) return mostrarErro(erro, "Informe até que horas.");
       if (imagem.enviando) return mostrarErro(erro, "Espere a foto terminar de enviar.");
       mostrarErro(erro, null);
-      const fixo = e.prazoTipo === "HorarioFixoNoDia";
       comCarregando(enviador(ev), async () => {
         try {
           await api.criarTarefa(filhoId, {
             titulo: titulo.value.trim(),
-            valorPadrao: v,
+            valorPadrao: aceitaDinheiro && v > 0 ? v : 0,
+            minutosTela: aceitaTempo ? e.minutos : 0,
             frequencia: e.frequencia,
             diasDaSemana: e.frequencia === "DiasDaSemana" ? e.dias : 0,
             dataInicio: dataInicio.value,
-            prazoTipo: e.prazoTipo,
-            prazoHorario: fixo ? `${prazoHorario.value || "20:00"}:00` : null,
-            prazoQuantidade: fixo ? null : qtd,
-            horarioInicio: fixo ? null : `${horarioInicio.value || horaAgora()}:00`,
+            ...montarPrazo({ quando: e.quando, ateHorario: ateHorario.value || "20:00", janelaInicio: janelaInicio.value || "08:00", janelaHoras: e.janelaHoras, dias: e.diasPrazo }),
             imagemUrl: imagem.valor,
             tiposComprovacaoAceitos: e.comprovacao,
           });
           avisar("Tarefa criada.");
-          ir(`/tarefas?filho=${filhoId}`);
+          ir("/tarefas?filho=" + filhoId);
         } catch (err) {
           mostrarErro(erro, mensagemDeErro(err, "Não foi possível criar a tarefa."));
         }
       });
     });
-    trocar(main, h("div", { class: "estreito" }, cabecalho("Nova tarefa", `Para ${filho.nome}`, { voltar: `#/tarefas?filho=${filhoId}` }), form));
+    posicionarData();
+    atualizarResumo();
+    trocar(main, h("div", { class: "estreito" }, cabecalho("Nova tarefa", "Para " + filho.nome, { voltar: "#/tarefas?filho=" + filhoId }), form));
     titulo.focus();
   });
 }
@@ -1060,12 +1181,14 @@ export function telaPerfil(main, _p, _b, { sair }) {
     const desenharTopo = () => trocar(topo, avatar(perfil.nome, foto, 72), h("div", { class: "texto" }, h("div", { class: "titulo-item", style: { fontSize: "1.2rem" } }, perfil.nome), h("span", { class: "pilula neutro" }, "MODO RESPONSÁVEL")));
     const grade = h("div", { class: "grade-avatares" });
     const desenharGrade = () => trocar(grade, AVATARES_PAI.map((id) =>
-      h("button", { type: "button", "aria-pressed": foto === `preset:${id}` ? "true" : "false", "aria-label": "Escolher este avatar", onclick: () => { foto = `preset:${id}`; desenharTopo(); desenharGrade(); } },
-        h("img", { src: `img/avatares/${id}.jpg`, alt: "", loading: "lazy" }))));
+      h("button", { type: "button", "aria-pressed": foto === "preset:" + id ? "true" : "false", "aria-label": "Escolher este avatar", onclick: () => { foto = "preset:" + id; desenharTopo(); desenharGrade(); } },
+        h("img", { src: "img/avatares/" + id + ".jpg", alt: "", loading: "lazy" }))));
     const arquivo = h("input", { type: "file", accept: "image/*", hidden: true });
     const salvar = botao("Salvar foto", (ev) => comCarregando(ev.currentTarget, async () => {
       try {
         await api.atualizarFoto(foto);
+        await carregarPerfilGuardado(); // a foto nova aparece no topo da página
+        window.dispatchEvent(new Event("conquistou:perfil"));
         avisar("Foto do perfil salva.");
       } catch (e) {
         avisar(mensagemDeErro(e), { erro: true });
@@ -1088,11 +1211,19 @@ export function telaPerfil(main, _p, _b, { sair }) {
     });
     desenharTopo();
     desenharGrade();
+
+    // os avatares ficam escondidos atrás de um botão, para a página mostrar primeiro a conta da família (igual ao app)
+    const areaFoto = h("div", { class: "pilha", hidden: true }, h("span", { class: "rotulo" }, "Escolha um avatar"), grade, h("div", { class: "divisor" }, "ou"), enviar, arquivo, salvar,
+      botao("Esconder avatares", () => { areaFoto.hidden = true; abrirFoto.hidden = false; }, { classe: "texto largo" }));
+    const abrirFoto = botao("Trocar foto ou avatar", () => { areaFoto.hidden = false; abrirFoto.hidden = true; }, { classe: "secundario largo", iconeNome: "imagem" });
+
     trocar(main, h("div", { class: "estreito" },
-      cabecalho("Seu perfil", null, { voltar: "#/" }),
-      h("div", { class: "cartao pilha" }, topo, h("span", { class: "rotulo" }, "Escolha um avatar"), grade, h("div", { class: "divisor" }, "ou"), enviar, arquivo, salvar),
+      cabecalho("Seu perfil", null, { voltar: "#/", direita: h("a", { class: "botao secundario pequeno", href: "#/ajuda" }, icone("ajuda"), "Ajuda") }),
+      h("div", { class: "cartao pilha" }, topo, abrirFoto, areaFoto),
       h("div", { class: "secao" }, "Conta da família"),
       h("div", { class: "cartao lista-links" },
+        h("a", { href: "#/responsaveis" }, icone("usuarios"), h("span", { class: "espaco" }, "Responsáveis da família"), icone("direita")),
+        h("a", { href: "#/ajuda" }, icone("ajuda"), h("span", { class: "espaco" }, "Ajuda"), icone("direita")),
         h("a", { href: "../termos.html", target: "_blank", rel: "noopener" }, icone("arquivo"), h("span", { class: "espaco" }, "Termos de Uso"), icone("direita")),
         h("a", { href: "../privacidade.html", target: "_blank", rel: "noopener" }, icone("escudo"), h("span", { class: "espaco" }, "Política de Privacidade"), icone("direita")),
         h("button", { type: "button", onclick: sair }, icone("sair"), h("span", { class: "espaco" }, "Sair desta conta"), icone("direita")),
@@ -1208,4 +1339,114 @@ export function telaCupons(main) {
       cupons.length === 0 ? cartaoVazio("Nenhum cupom ainda.") : h("div", { class: "pilha" }, cupons.map(linha)),
       form));
   });
+}
+
+// ======================================================================
+// RESPONSÁVEIS DA FAMÍLIA (pai e mãe) e AJUDA
+// ======================================================================
+const validadeDoConvite = (iso) => {
+  const horas = Math.floor((new Date(iso).getTime() - Date.now()) / 3_600_000);
+  return horas < 1 ? "menos de 1 h" : horas + " h";
+};
+
+export function telaResponsaveis(main) {
+  carregar(main, api.responsaveis, (dados) => {
+    const recarregar = () => telaResponsaveis(main);
+    const cheia = dados.responsaveis.length + dados.convites.length >= dados.maximo;
+    const email = h("input", { type: "email", autocomplete: "off", placeholder: "mae@email.com", maxlength: 256 });
+    const erro = erroForm();
+
+    const linhaResponsavel = (r) => h("div", { class: "item" },
+      avatar(r.nome, r.fotoUrl, 44),
+      h("div", { class: "texto" },
+        h("div", { class: "titulo-item" }, r.nome + (r.euMesmo ? " (você)" : "")),
+        h("div", { class: "meta" }, (r.titular ? "Titular da conta" : "Responsável") + (r.email ? " · " + r.email : ""))),
+      dados.souTitular && !r.euMesmo
+        ? h("button", { type: "button", class: "icone-acao", title: "Remover " + r.nome, "aria-label": "Remover " + r.nome, style: { color: "var(--danger-txt)" }, onclick: async () => {
+            const ok = await confirmar("Remover responsável", r.nome + " deixa de acessar a família. As aprovações que já fez continuam no histórico.", { sim: "Remover", perigo: true });
+            if (!ok) return;
+            try { await api.removerResponsavel(r.usuarioId); avisar("Responsável removido."); recarregar(); } catch (err) { avisar(mensagemDeErro(err), { erro: true }); }
+          } }, icone("lixeira"))
+        : null);
+
+    const linhaConvite = (c) => h("div", { class: "item" },
+      h("span", { class: "imagem-vazia" }, icone("usuarios")),
+      h("div", { class: "texto" }, h("div", { class: "titulo-item" }, c.email), h("div", { class: "meta" }, "Vale por mais " + validadeDoConvite(c.expiraEm))),
+      dados.souTitular
+        ? h("button", { type: "button", class: "icone-acao", title: "Cancelar convite", "aria-label": "Cancelar convite de " + c.email, onclick: async () => {
+            const ok = await confirmar("Cancelar convite", "O código enviado para " + c.email + " deixa de valer.", { sim: "Cancelar convite", nao: "Manter", perigo: true });
+            if (!ok) return;
+            try { await api.cancelarConvite(c.id); recarregar(); } catch (err) { avisar(mensagemDeErro(err), { erro: true }); }
+          } }, icone("x"))
+        : null);
+
+    let convidar;
+    if (!dados.souTitular) convidar = h("p", { class: "dica" }, "Só quem criou a conta da família convida ou remove responsáveis.");
+    else if (!dados.emailAtivo) convidar = h("p", { class: "dica" }, "O envio de e-mail ainda não está ligado. Fale com o suporte para convidar.");
+    else if (cheia) convidar = h("p", { class: "dica" }, "A família já tem o máximo de " + dados.maximo + " responsáveis (contando os convites esperando).");
+    else {
+      const form = h("form", { class: "cartao", novalidate: true },
+        h("p", { class: "dica", style: { margin: 0 } }, "Mandamos um e-mail com um código. A pessoa abre \"Entrar na família\" (no app ou nesta página) e entra com a conta Google desse e-mail, ou digita o código. O convite vale por 48 horas."),
+        campo("E-mail de quem vai entrar", email), erro,
+        botao("Enviar convite", null, { tipo: "submit", classe: "largo" }));
+      form.addEventListener("submit", (ev) => {
+        ev.preventDefault();
+        if (!email.value.trim()) return mostrarErro(erro, "Informe o e-mail.");
+        mostrarErro(erro, null);
+        comCarregando(enviador(ev), async () => {
+          try {
+            const c = await api.convidarResponsavel(email.value.trim());
+            avisar("Convite enviado para " + c.email + ".");
+            recarregar();
+          } catch (err) {
+            mostrarErro(erro, mensagemDeErro(err, "Não foi possível enviar o convite."));
+          }
+        });
+      });
+      convidar = form;
+    }
+
+    trocar(main, h("div", { class: "estreito" },
+      cabecalho("Responsáveis da família", "Pai, mãe ou quem cuida junto", { voltar: "#/perfil" }),
+      h("div", { class: "secao" }, "Quem cuida da família"),
+      h("div", { class: "cartao pilha" }, dados.responsaveis.map(linhaResponsavel)),
+      dados.convites.length ? [h("div", { class: "secao" }, "Convites esperando"), h("div", { class: "cartao pilha" }, dados.convites.map(linhaConvite))] : null,
+      h("div", { class: "secao" }, "Convidar outro responsável"),
+      convidar));
+  });
+}
+
+export function telaAjuda(main) {
+  const busca = h("input", { type: "search", placeholder: "Buscar uma dúvida", "aria-label": "Buscar uma dúvida", autocomplete: "off" });
+  const lista = h("div", { class: "pilha" });
+  let topicoAberto = null;
+  let perguntaAberta = null;
+
+  const desenhar = () => {
+    const termo = busca.value.trim();
+    const topicos = filtrarTopicos(TOPICOS_SITE, termo);
+    if (topicos.length === 0) return trocar(lista, h("p", { class: "vazio" }, "Nenhuma dúvida encontrada. Tente outra palavra."));
+    trocar(lista, topicos.map((t) => {
+      const aberto = !!termo || topicoAberto === t.id;
+      return h("div", { class: "cartao ajuda-topico" },
+        h("button", { type: "button", class: "ajuda-cabeca", "aria-expanded": aberto ? "true" : "false", onclick: () => { topicoAberto = topicoAberto === t.id ? null : t.id; desenhar(); } },
+          h("span", { class: "espaco" }, t.titulo), icone(aberto ? "x" : "mais")),
+        aberto ? t.perguntas.map((p) => {
+          const chave = t.id + ":" + p.pergunta;
+          const abertaAgora = !!termo || perguntaAberta === chave;
+          return h("div", { class: "ajuda-pergunta" },
+            h("button", { type: "button", class: "ajuda-pergunta-cabeca", "aria-expanded": abertaAgora ? "true" : "false", onclick: () => { perguntaAberta = perguntaAberta === chave ? null : chave; desenhar(); } },
+              h("span", { class: "espaco" }, p.pergunta), icone(abertaAgora ? "x" : "mais")),
+            abertaAgora ? h("div", { class: "ajuda-passos" },
+              h("ol", {}, p.passos.map((passo) => h("li", {}, passo))),
+              p.dica ? h("p", { class: "ajuda-dica" }, icone("info"), h("span", {}, p.dica)) : null) : null);
+        }) : null);
+    }));
+  };
+  busca.addEventListener("input", desenhar);
+  trocar(main, h("div", { class: "estreito" },
+    cabecalho("Ajuda", "Escolha um assunto para ver o passo a passo de cada item.", { voltar: "#/perfil" }),
+    h("div", { class: "campo", style: { marginBottom: "14px" } }, busca),
+    lista));
+  desenhar();
 }

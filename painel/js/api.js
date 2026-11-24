@@ -18,6 +18,9 @@ export const CLOUDINARY_PRESET = "combinado_comprovantes";
 
 const CHAVE = "conquistou.painel.sessao";
 
+// Nome e foto do responsável, para o topo da página (mesma ideia do botão com a foto no app).
+export const perfilGuardado = { dados: null };
+
 let accessToken = null;
 let accessExpiraEm = 0;
 let sessao = lerGuardada(); // { refreshToken, usuarioId, nome, papel, precisaAceitarTermos, manter }
@@ -69,6 +72,7 @@ export function aplicarResultado(resultado, manter) {
 }
 
 export function limparSessao() {
+  perfilGuardado.dados = null;
   accessToken = null;
   accessExpiraEm = 0;
   sessao = null;
@@ -201,8 +205,11 @@ export function verificadorGoogle() {
 export const auth = {
   entrar: (email, senha) => post("/api/auth/login", { email, senha }, { publico: true, padrao: "E-mail ou senha incorretos." }),
   registrar: (dados) => post("/api/auth/registrar", dados, { publico: true }),
+  // convite de pai/mãe: cria a conta dentro da família de quem convidou (e-mail + código de 8 letras e números)
+  registrarComConvite: (dados) => post("/api/auth/registrar-com-convite", dados, { publico: true }),
   // "desafio" = SHA-256 (base64url) de um segredo que só esta aba tem; o segredo vai no trocarGoogle
-  iniciarGoogle: (retorno, desafio) => get("/api/auth/google/iniciar", { parametros: { appRedirect: retorno, desafio }, publico: true }),
+  // convite = true: entra na família do convite (vale o e-mail da conta Google) em vez de criar uma família nova
+  iniciarGoogle: (retorno, desafio, convite = false) => get("/api/auth/google/iniciar", { parametros: { appRedirect: retorno, desafio, convite: convite ? "true" : undefined }, publico: true }),
   trocarGoogle: (handoff, verificador) => post("/api/auth/google/trocar", { handoff, verificador: verificador || undefined }, { publico: true, padrao: "Login com Google expirado. Tente novamente." }),
   aceitarTermos: () => post("/api/auth/aceitar-termos"),
   // "Esqueci a senha": o servidor manda um código de 6 números por e-mail (responde igual exista ou não a conta)
@@ -268,6 +275,12 @@ export const api = {
 
   perfil: () => get("/api/perfil"),
 
+  // pai e mãe na mesma família (só o titular convida e remove)
+  responsaveis: () => get("/api/familia/responsaveis"),
+  convidarResponsavel: (email) => post("/api/familia/responsaveis/convites", { email }),
+  cancelarConvite: (id) => del(`/api/familia/responsaveis/convites/${id}`),
+  removerResponsavel: (id) => del(`/api/familia/responsaveis/${id}`),
+
   // administração (só o e-mail de Admin:Emails no servidor; os outros recebem 403)
   souAdmin: () => get("/api/admin/eu"),
   cupons: () => get("/api/admin/cupons"),
@@ -275,6 +288,15 @@ export const api = {
   definirCupomAtivo: (id, ativo) => put(`/api/admin/cupons/${id}/ativo`, { ativo }),
   atualizarFoto: (fotoUrl) => put("/api/perfil/foto", { fotoUrl }),
 };
+
+export async function carregarPerfilGuardado() {
+  try {
+    perfilGuardado.dados = await get("/api/perfil");
+  } catch {
+    perfilGuardado.dados = null; // o topo mostra a inicial do nome
+  }
+  return perfilGuardado.dados;
+}
 
 // ---------- fotos (direto para o Cloudinary, preset "unsigned", igual ao app) ----------
 // Fotos grandes são reduzidas antes (lado maior 1600 px, JPEG): sobe mais rápido e cabe no limite.
