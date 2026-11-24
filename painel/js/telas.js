@@ -1503,6 +1503,164 @@ export function telaSeguranca(main) {
 const auth_seguranca = () => auth.seguranca();
 
 // ======================================================================
+// AFILIADOS (só o administrador)
+// ======================================================================
+const LINK_AFILIADO = (codigo) => "https://conquistou.com.br/?ref=" + codigo;
+
+const LINK_PAINEL_AFILIADO = (chave) => "https://conquistou.com.br/afiliado/#" + chave;
+
+/** A chave do painel do afiliado só aparece uma vez (o servidor guarda só o resumo): mostra com o link pronto para mandar. */
+function mostrarChaveAfiliado(nome, chave) {
+  if (!chave) return;
+  const link = LINK_PAINEL_AFILIADO(chave);
+  const copiarLink = botao("Copiar link do painel", async () => {
+    try { await navigator.clipboard.writeText(link); avisar("Link copiado."); } catch { avisar("Selecione e copie o link.", { erro: true }); }
+  }, { classe: "largo", iconeNome: "copiar" });
+  abrirJanela("Painel de " + nome, h("div", { class: "pilha" },
+    h("p", { style: { margin: 0 } }, "Mande este link para o afiliado. Ele mostra só números (indicações, comissão a receber e pagamentos), nunca dados das famílias."),
+    h("input", { type: "text", readonly: true, value: link, "aria-label": "Link do painel", style: { width: "100%" }, onfocus: (e) => e.target.select() }),
+    h("p", { class: "dica", style: { margin: 0 } }, "Esta chave não aparece de novo. Se perder, gere uma nova (a antiga deixa de valer)."),
+    copiarLink));
+}
+
+/** Janela da comissão: resumo, "marcar como pago" e o extrato dos pagamentos já feitos. */
+function abrirComissao(a, aoFechar) {
+  const corpo = h("div", { class: "pilha" }, carregandoTela());
+  const { dialogo } = abrirJanela("Comissão de " + a.nome, corpo);
+  dialogo.addEventListener("close", aoFechar);
+  const desenhar = (d) => {
+    const c = d.comissao;
+    const valor = entradaValor();
+    const obs = h("input", { type: "text", placeholder: "ex: PIX de novembro", maxlength: 500 });
+    const erro = erroForm();
+    const form = h("form", { class: "pilha", novalidate: true },
+      h("span", { class: "rotulo" }, "Marcar como pago"),
+      h("small", { class: "dica" }, "Faça o PIX no seu banco e registre aqui o valor. Não passa do que está a receber."),
+      h("div", { class: "dupla" }, campo("Valor (R$)", valor), campo("Observação (opcional)", obs)),
+      erro,
+      botao("Registrar pagamento", null, { tipo: "submit", desabilitado: !(c.aReceber > 0) }));
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const v = lerReais(valor.value);
+      if (!(v > 0)) return mostrarErro(erro, "Informe o valor pago.");
+      if (v > c.aReceber) return mostrarErro(erro, "O valor passa do que está a receber (" + formatarReais(c.aReceber) + ").");
+      mostrarErro(erro, null);
+      comCarregando(enviador(ev), async () => {
+        try {
+          desenhar(await api.pagarAfiliado(a.id, { valor: v, observacao: obs.value.trim() || null }));
+          avisar("Pagamento registrado.");
+        } catch (e) {
+          mostrarErro(erro, mensagemDeErro(e, "Não foi possível registrar."));
+        }
+      });
+    });
+    const linha = (rotulo, v, destaque) => h("div", { class: "item" }, h("div", { class: "texto" }, rotulo), h("b", { style: { color: destaque ? "var(--success-txt)" : "inherit" } }, formatarReais(v)));
+    trocar(corpo,
+      h("div", { class: "pilha" },
+        linha("A receber agora", c.aReceber, true),
+        linha("Em carência (libera em até " + c.diasDeCarencia + " dias)", c.emCarencia),
+        linha("Já paga", c.paga),
+        linha("Estornada por reembolso", c.estornada),
+        h("small", { class: "dica" }, c.pagamentosContados + " pagamento(s) de assinatura contam. Só vale em reais e no valor líquido, depois da taxa da loja.")),
+      form,
+      h("span", { class: "rotulo" }, "Pagamentos já feitos"),
+      d.pagamentosRecebidos.length === 0
+        ? h("p", { class: "vazio" }, "Nenhum ainda.")
+        : h("div", { class: "pilha" }, d.pagamentosRecebidos.map((p) => h("div", { class: "item" },
+            h("div", { class: "texto" }, new Date(p.pagoEm).toLocaleDateString("pt-BR") + (p.observacao ? " · " + p.observacao : "")), h("b", {}, formatarReais(p.valor))))));
+  };
+  api.comissaoAfiliado(a.id).then(desenhar).catch((e) => trocar(corpo, h("p", { class: "erro" }, mensagemDeErro(e))));
+}
+
+export function telaAfiliados(main) {
+  carregar(main, api.afiliados, (lista) => {
+    const linha = (a) => {
+      const alternar = botao(a.ativo ? "Desativar" : "Ativar", (ev) => comCarregando(ev.currentTarget, async () => {
+        try {
+          const novo = await api.definirAfiliadoAtivo(a.id, !a.ativo);
+          avisar("Afiliado " + novo.nome + (novo.ativo ? " ativado." : " desativado."));
+          telaAfiliados(main);
+        } catch (e) {
+          avisar(mensagemDeErro(e), { erro: true });
+        }
+      }), { classe: "pequeno " + (a.ativo ? "perigo" : "") });
+      const comissao = botao("Comissão", () => abrirComissao(a, () => telaAfiliados(main)), { classe: "pequeno", iconeNome: "arquivo" });
+      const novaChave = botao("Nova chave", async (ev) => {
+        const btn = ev.currentTarget;
+        const ok = await confirmar("Gerar chave nova?", "A chave antiga do painel de " + a.nome + " deixa de funcionar. A nova aparece uma vez só: copie e mande para ela.", { sim: "Gerar chave nova" });
+        if (!ok) return;
+        comCarregando(btn, async () => {
+          try {
+            const novo = await api.novaChaveAfiliado(a.id);
+            mostrarChaveAfiliado(novo.nome, novo.chavePainel);
+          } catch (e) {
+            avisar(mensagemDeErro(e), { erro: true });
+          }
+        });
+      }, { classe: "secundario pequeno" });
+      const copiar = botao("Copiar link", async (ev) => {
+        try {
+          await navigator.clipboard.writeText(LINK_AFILIADO(a.codigo));
+          avisar("Link copiado: " + LINK_AFILIADO(a.codigo));
+        } catch {
+          avisar(LINK_AFILIADO(a.codigo));
+        }
+      }, { classe: "secundario pequeno", iconeNome: "copiar" });
+      return h("div", { class: "cartao " + (a.ativo ? "" : "inativo") },
+        h("div", { class: "item" },
+          h("div", { class: "texto" },
+            h("div", { class: "titulo-item" }, a.nome + " · " + a.codigo),
+            h("div", { class: "meta" },
+              a.familias + " " + (a.familias === 1 ? "família indicada" : "famílias indicadas") + " · " + a.assinantes + " " + (a.assinantes === 1 ? "assinante" : "assinantes") +
+              " · comissão de " + a.percentualComissao + "% por " + a.mesesComissao + " meses" + (a.email ? " · " + a.email : "")),
+            h("div", { class: "meta" }, h("b", {}, "A receber: " + formatarReais(a.aReceber)), " · em carência: " + formatarReais(a.emCarencia))),
+          h("span", { class: "pilula " + (a.ativo ? "sucesso" : "") }, a.ativo ? "Ativo" : "Desativado"), comissao, novaChave, copiar, alternar));
+    };
+
+    const codigo = h("input", { type: "text", placeholder: "ex: MARIA10", maxlength: 30, autocomplete: "off", style: { textTransform: "uppercase" } });
+    const nome = h("input", { type: "text", placeholder: "Nome do afiliado", maxlength: 120 });
+    const email = h("input", { type: "email", placeholder: "e-mail (opcional)", maxlength: 256 });
+    const percentual = h("input", { type: "number", min: 0, max: 100, step: 0.5, value: 30 });
+    const meses = h("input", { type: "number", min: 1, max: 60, step: 1, value: 12 });
+    const erro = erroForm();
+    const form = h("form", { class: "cartao", novalidate: true, style: { marginTop: "16px" } },
+      h("div", { class: "titulo-item" }, "Novo afiliado"),
+      h("div", { class: "dupla", style: { marginTop: "12px" } }, campo("Código", codigo), campo("Nome", nome)),
+      campo("E-mail (opcional)", email, "O e-mail do afiliado não conta como indicação se ele mesmo criar uma conta."),
+      h("div", { class: "dupla", style: { marginTop: "12px" } }, campo("Comissão (%)", percentual), campo("Por quantos meses", meses)),
+      h("small", { class: "dica" }, "A comissão é sobre o valor líquido (depois da taxa da loja) de cada pagamento da família indicada, só nos primeiros meses, com 30 dias de carência. Reembolso estorna."),
+      erro,
+      botao("Criar afiliado", null, { tipo: "submit" }));
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const texto = codigo.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      const pct = Number(percentual.value);
+      const m = Number(meses.value);
+      if (!/^[A-Z0-9]{3,30}$/.test(texto)) return mostrarErro(erro, "O código tem de ter de 3 a 30 letras ou números, sem espaço.");
+      if (!nome.value.trim()) return mostrarErro(erro, "Informe o nome do afiliado.");
+      if (!(pct >= 0 && pct <= 100)) return mostrarErro(erro, "A comissão vai de 0% a 100%.");
+      if (!(Number.isInteger(m) && m >= 1 && m <= 60)) return mostrarErro(erro, "A comissão vale de 1 a 60 meses.");
+      mostrarErro(erro, null);
+      comCarregando(enviador(ev), async () => {
+        try {
+          const criado = await api.criarAfiliado({ codigo: texto, nome: nome.value.trim(), email: email.value.trim() || null, percentualComissao: pct, mesesComissao: m });
+          avisar("Afiliado " + texto + " criado.");
+          telaAfiliados(main);
+          mostrarChaveAfiliado(criado.nome, criado.chavePainel);
+        } catch (e) {
+          mostrarErro(erro, mensagemDeErro(e, "Não foi possível criar o afiliado."));
+        }
+      });
+    });
+
+    trocar(main, h("div", { class: "estreito" },
+      cabecalho("Afiliados", "Quem indica o Conquistou. O link de divulgação é conquistou.com.br/?ref=CÓDIGO."),
+      lista.length === 0 ? cartaoVazio("Nenhum afiliado ainda.") : h("div", { class: "pilha" }, lista.map(linha)),
+      form));
+  });
+}
+
+// ======================================================================
 // RESPONSÁVEIS DA FAMÍLIA (pai e mãe) e AJUDA
 // ======================================================================
 const validadeDoConvite = (iso) => {

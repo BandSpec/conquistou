@@ -179,6 +179,30 @@ const post = (c, corpo, o) => chamar("POST", c, { ...o, corpo: corpo ?? undefine
 const put = (c, corpo, o) => chamar("PUT", c, { ...o, corpo });
 const del = (c, o) => chamar("DELETE", c, o);
 
+// ---------- código de indicação (link de afiliado: conquistou.com.br/?ref=CODIGO) ----------
+const CHAVE_REF = "conquistou.ref";
+
+/** O código guardado pelo link de afiliado (vale 30 dias), ou "". */
+export function indicacaoGuardada() {
+  try {
+    const g = JSON.parse(localStorage.getItem(CHAVE_REF) || "null");
+    return g && g.ate > Date.now() ? String(g.c) : "";
+  } catch {
+    return "";
+  }
+}
+
+/** Guarda o código vindo do endereço (também funciona se o link apontar direto para o painel). */
+export function guardarIndicacao(codigo) {
+  const limpo = String(codigo ?? "").replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 30);
+  if (!limpo) return;
+  try {
+    localStorage.setItem(CHAVE_REF, JSON.stringify({ c: limpo, ate: Date.now() + 30 * 864e5 }));
+  } catch {
+    /* sem armazenamento: o código pode ser digitado */
+  }
+}
+
 // ---------- login com Google: prova de que quem conclui o login é quem começou ----------
 const CHAVE_VERIFICADOR = "conquistou.painel.google";
 
@@ -209,7 +233,7 @@ export const auth = {
   registrarComConvite: (dados) => post("/api/auth/registrar-com-convite", dados, { publico: true }),
   // "desafio" = SHA-256 (base64url) de um segredo que só esta aba tem; o segredo vai no trocarGoogle
   // convite = true: entra na família do convite (vale o e-mail da conta Google) em vez de criar uma família nova
-  iniciarGoogle: (retorno, desafio, convite = false) => get("/api/auth/google/iniciar", { parametros: { appRedirect: retorno, desafio, convite: convite ? "true" : undefined }, publico: true }),
+  iniciarGoogle: (retorno, desafio, convite = false, indicacao = "") => get("/api/auth/google/iniciar", { parametros: { appRedirect: retorno, desafio, convite: convite ? "true" : undefined, indicacao: indicacao || undefined }, publico: true }),
   trocarGoogle: (handoff, verificador) => post("/api/auth/google/trocar", { handoff, verificador: verificador || undefined }, { publico: true, padrao: "Login com Google expirado. Tente novamente." }),
   aceitarTermos: () => post("/api/auth/aceitar-termos"),
   // "Esqueci a senha": o servidor manda um código de 6 números por e-mail (responde igual exista ou não a conta)
@@ -290,6 +314,12 @@ export const api = {
 
   // administração (só o e-mail de Admin:Emails no servidor; os outros recebem 403)
   souAdmin: () => get("/api/admin/eu"),
+  afiliados: () => get("/api/admin/afiliados"),
+  criarAfiliado: (dados) => post("/api/admin/afiliados", dados),
+  definirAfiliadoAtivo: (id, ativo) => put(`/api/admin/afiliados/${id}/ativo`, { ativo }),
+  novaChaveAfiliado: (id) => post(`/api/admin/afiliados/${id}/nova-chave`),
+  comissaoAfiliado: (id) => get(`/api/admin/afiliados/${id}/comissao`),
+  pagarAfiliado: (id, dados) => post(`/api/admin/afiliados/${id}/pagamentos`, dados),
   cupons: () => get("/api/admin/cupons"),
   criarCupom: (codigo, percentual, limiteUsos, validoAte) => post("/api/admin/cupons", { codigo, percentual, limiteUsos: limiteUsos ?? undefined, validoAte: validoAte ?? undefined }),
   definirCupomAtivo: (id, ativo) => put(`/api/admin/cupons/${id}/ativo`, { ativo }),
