@@ -264,6 +264,16 @@ export const TOPICOS_SITE = [
         dica: "O bloqueio funciona só em celulares Android e o celular do filho precisa estar configurado.",
       },
       {
+        pergunta: "Como dar horas de tela extras, sem tarefa?",
+        passos: [
+          "No Painel, clique no ícone do relógio no cartão do filho.",
+          "Escolha quanto tempo (30 min, 1 h, 2 h... ou digite os minutos).",
+          "Escolha até quando vale: só hoje, amanhã, sábado, domingo, outro dia ou sem vencimento.",
+          "Se quiser, escreva o motivo e clique em \"Dar ... de tela\". O filho recebe um aviso.",
+        ],
+        dica: "Passou do vencimento, o que sobrou some e não acumula para os dias seguintes. Você pode cancelar um bônus em \"Bônus valendo\". O filho precisa ganhar tempo de tela (Editar filho: \"Tempo\" ou \"Os dois\").",
+      },
+      {
         pergunta: "Como ver o app do jeito que meu filho vê?",
         passos: [
           "No app, no Painel, toque no ícone \"Ver como filho\" do cartão dele.",

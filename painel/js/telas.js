@@ -12,6 +12,7 @@ import { ir } from "./rotas.js";
 import { copiaDaTarefa, destinosDaCopia, recompensaCompativel } from "./duplicar.js";
 import { montarPrazo, horasDaJanela, fimDaJanela, resumoDaTarefa, SUGESTOES_TAREFA } from "./prazo.js";
 import { TOPICOS_SITE, filtrarTopicos } from "./ajuda.js";
+import { formatarDuracao, diaCurto, opcoesDeVencimento, lerMinutos, ATALHOS_BONUS } from "./bonus.js";
 
 // ---------- pedaços comuns ----------
 function cabecalho(titulo, subtitulo, { voltar, direita } = {}) {
@@ -104,11 +105,109 @@ function cartaoFilho(filho) {
         h("span", { class: `pilula ${pend > 0 ? "perigo" : ""}` }, filho.ativo ? (pend > 0 ? `${pend} pendente${pend > 1 ? "s" : ""}` : "Em dia") : "Desativado"),
         h("span", { class: "espaco" }),
         h("a", { class: "icone-acao", href: `#/tarefas?filho=${filho.usuarioId}`, title: "Tarefas", "aria-label": `Tarefas de ${filho.nome}` }, icone("lista")),
+        filho.tipoRecompensa !== "Dinheiro" ? h("a", { class: "icone-acao", href: `#/tela/${filho.usuarioId}`, title: "Dar tempo de tela", "aria-label": `Dar tempo de tela para ${filho.nome}` }, icone("relogio")) : null,
         h("a", { class: "icone-acao", href: `#/metas/${filho.usuarioId}`, title: "Metas", "aria-label": `Metas de ${filho.nome}` }, icone("alvo")),
         h("a", { class: "icone-acao", href: `#/filhos/${filho.usuarioId}`, title: "Editar", "aria-label": `Editar ${filho.nome}` }, icone("editar"))
       )
     )
   );
+}
+
+// ======================================================================
+// TEMPO DE TELA: dar horas extras (bônus) com vencimento
+// ======================================================================
+export function telaBonusTela(main, { filhoId }) {
+  const recarregar = () => telaBonusTela(main, { filhoId });
+  carregar(main, () => Promise.all([api.filhos(), api.tempoTelaFilho(filhoId)]), ([filhos, tela]) => {
+    const f = filhos.find((x) => x.usuarioId === filhoId);
+    const nome = f?.nome ?? "";
+    const topo = cabecalho("Tempo de tela", nome, { voltar: "#/" });
+    const saldo = h("div", { class: "cartao" },
+      h("div", { class: "rotulo-saldo" }, "Saldo de tempo de tela"),
+      h("div", { class: "numero-saldo", style: { fontSize: "1.9rem", fontWeight: 800 } }, formatarDuracao(tela.saldoSegundos)),
+      h("p", { class: "dica" }, "Tarefas aprovadas e bônus ainda valendo. Só desconta o uso real dos apps bloqueados no celular."));
+
+    if (tela.tipoRecompensa === "Dinheiro") {
+      return trocar(main, h("div", { class: "estreito", vars: varsTema(f?.genero) }, topo, saldo,
+        cartaoVazio(`${nome} ganha dinheiro. Em Editar filho, escolha "Tempo" ou "Os dois" para poder dar horas de tela.`)));
+    }
+
+    let minutos = 60;
+    let vence = "hoje";
+    const opcoes = opcoesDeVencimento();
+    const outro = h("input", { type: "text", inputmode: "numeric", placeholder: "Outro valor, em minutos", autocomplete: "off", maxlength: 4 });
+    const data = h("input", { type: "date", min: opcoes[0][2], "aria-label": "Dia do vencimento", hidden: true });
+    const motivo = h("input", { type: "text", placeholder: "ex.: sábado de manhã", maxlength: 100 });
+    const erro = erroForm();
+    const botaoDar = botao("", null, { tipo: "submit", classe: "largo" });
+
+    const minutosAtuais = () => (outro.value.trim() ? lerMinutos(outro.value) : minutos);
+    const dataEscolhida = () => (vence === "outro" ? data.value || null : opcoes.find((o) => o[0] === vence)[2]);
+    const atualizarBotao = () => {
+      const m = minutosAtuais();
+      const d = dataEscolhida();
+      trocar(botaoDar, icone("relogio"), m ? `Dar ${formatarDuracao(m * 60)} de tela${d ? ` · até ${diaCurto(d)}` : ""}` : "Escolha o tempo");
+    };
+
+    const chipsMinutos = h("div", { class: "chips", role: "group", "aria-label": "Quanto tempo", style: { marginBottom: 0 } });
+    const desenharMinutos = () => trocar(chipsMinutos, ATALHOS_BONUS.map((m) =>
+      chip(m < 60 ? `${m} min` : `${m / 60} h`, !outro.value.trim() && minutos === m, () => { minutos = m; outro.value = ""; desenharMinutos(); atualizarBotao(); })));
+    outro.addEventListener("input", () => { outro.value = outro.value.replace(/\D/g, ""); desenharMinutos(); atualizarBotao(); });
+
+    const chipsVence = h("div", { class: "chips", role: "group", "aria-label": "Vale até quando", style: { marginBottom: 0 } });
+    const desenharVence = () => {
+      trocar(chipsVence, opcoes.map(([id, texto]) => chip(texto, vence === id, () => { vence = id; data.hidden = id !== "outro"; desenharVence(); atualizarBotao(); })));
+    };
+    data.addEventListener("change", () => { atualizarBotao(); });
+
+    const form = h("form", { class: "cartao", novalidate: true },
+      h("p", { class: "dica" }, "Libere horas extras sem precisar de tarefa. Se tiver vencimento, o que sobrar some no fim do dia e não acumula."),
+      h("div", { class: "secao" }, "Quanto tempo?"), chipsMinutos, campo("", outro),
+      h("div", { class: "secao" }, "Vale até quando?"), chipsVence, data,
+      campo("Motivo (opcional)", motivo),
+      erro, botaoDar);
+    desenharMinutos();
+    desenharVence();
+    atualizarBotao();
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const m = minutosAtuais();
+      if (!m) return mostrarErro(erro, "Informe o tempo em minutos, de 1 a 1440 (24 horas).");
+      const d = dataEscolhida();
+      if (vence === "outro" && !d) return mostrarErro(erro, "Escolha o dia em que o bônus vence.");
+      mostrarErro(erro, "");
+      comCarregando(enviador(ev), async () => {
+        try {
+          await api.darBonusTela(filhoId, m, d, motivo.value.trim() || null);
+          avisar(`${nome} ganhou ${formatarDuracao(m * 60)} de tela.`);
+          recarregar();
+        } catch (e) {
+          mostrarErro(erro, mensagemDeErro(e, "Não foi possível dar o bônus."));
+        }
+      });
+    });
+
+    const ativos = tela.bonus ?? [];
+    const lista = ativos.map((b) => h("div", { class: "cartao" },
+      h("div", { class: "linha" },
+        h("div", { class: "espaco" },
+          h("strong", {}, `${formatarDuracao(b.segundosRestantes)} de ${formatarDuracao(b.segundosTotal)}`),
+          h("div", { class: "dica" }, `${b.venceEm ? `Vale até ${diaCurto(b.venceEm)}` : "Sem vencimento"}${b.motivo ? ` · ${b.motivo}` : ""}`)),
+        botao("Cancelar", async (ev) => {
+          const btn = ev.currentTarget;
+          const ok = await confirmar("Cancelar este bônus?", `O que sobrou de ${formatarDuracao(b.segundosRestantes)} deixa de valer agora.`, { sim: "Cancelar bônus", nao: "Voltar", perigo: true });
+          if (!ok) return;
+          comCarregando(btn, async () => {
+            try { await api.cancelarBonusTela(filhoId, b.id); avisar("Bônus cancelado."); recarregar(); }
+            catch (e) { avisar(mensagemDeErro(e, "Não foi possível cancelar."), { erro: true }); }
+          });
+        }))));
+
+    trocar(main, h("div", { class: "estreito", vars: varsTema(f?.genero) },
+      topo, saldo,
+      h("div", { class: "secao" }, "Dar tempo de tela"), form,
+      ativos.length ? [h("div", { class: "secao" }, "Bônus valendo"), h("div", { class: "pilha" }, lista)] : null));
+  });
 }
 
 // ======================================================================
