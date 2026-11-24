@@ -27,6 +27,7 @@ const ROTAS = [
   ["/regras/:id", telas.telaFormularioRegra, "castigos"],
   ["/filhos/novo", telas.telaNovoFilho, "painel"],
   ["/filhos/:id", telas.telaEditarFilho, "painel"],
+  ["/tela/:filhoId", telas.telaBonusTela, "painel"],
   ["/metas/:filhoId", telas.telaMetas, "painel"],
   ["/metas/:filhoId/nova", telas.telaFormularioMeta, "painel"],
   ["/metas/:filhoId/:metaId", telas.telaDetalheMeta, "painel"],

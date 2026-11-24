@@ -294,6 +294,9 @@ export const api = {
   desativarRegra: (id) => del(`/api/familia/regras-castigo/${id}`),
   reativarRegra: (id) => post(`/api/familia/regras-castigo/${id}/reativar`),
 
+  tempoTelaFilho: (filhoId) => get(`/api/familia/filhos/${filhoId}/tempo-tela`),
+  darBonusTela: (filhoId, minutos, venceEm, motivo) => post(`/api/familia/filhos/${filhoId}/tempo-tela/bonus`, { minutos, venceEm, motivo }),
+  cancelarBonusTela: (filhoId, bonusId) => del(`/api/familia/filhos/${filhoId}/tempo-tela/bonus/${bonusId}`),
   metas: (filhoId) => get("/api/metas", { parametros: { filhoId } }),
   criarMeta: (filhoId, dados) => post("/api/metas", { ...dados, filhoId }),
   atualizarMeta: (id, dados) => put(`/api/metas/${id}`, dados),
