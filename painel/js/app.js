@@ -1,7 +1,7 @@
 // Área do responsável do Conquistou: o pai/mãe faz pelo navegador o que faz no app.
 // Começo da página: conclui o login com Google (se voltou dele), confere a sessão e desenha a tela da rota.
 
-import { auth, api, aplicarResultado, sessaoAtual, garantirSessao, limparSessao, definirAoExpirar, mensagemDeErro, novoDesafioGoogle, verificadorGoogle, carregarPerfilGuardado, perfilGuardado } from "./api.js";
+import { auth, api, aplicarResultado, sessaoAtual, garantirSessao, limparSessao, definirAoExpirar, mensagemDeErro, novoDesafioGoogle, verificadorGoogle, carregarPerfilGuardado, perfilGuardado, indicacaoGuardada, guardarIndicacao } from "./api.js";
 import { h, trocar, icone, iconeGoogle, botao, comCarregando, campo, avisar, carregandoTela, avatar } from "./ui.js";
 import { rotaAtual, ir, casar } from "./rotas.js";
 import * as telas from "./telas.js";
@@ -32,6 +32,7 @@ const ROTAS = [
   ["/metas/:filhoId/:metaId", telas.telaDetalheMeta, "painel"],
   ["/metas/:filhoId/:metaId/editar", telas.telaFormularioMeta, "painel"],
   ["/cupons", telas.telaCupons, "cupons"],
+  ["/afiliados", telas.telaAfiliados, "afiliados"],
   ["/perfil", telas.telaPerfil, null],
   ["/responsaveis", telas.telaResponsaveis, null],
   ["/ajuda", telas.telaAjuda, null],
@@ -46,6 +47,7 @@ const ABAS = [
 ];
 // só aparece para o administrador do Conquistou (o servidor confere de novo em cada chamada)
 const ABA_CUPONS = ["cupons", "#/cupons", "Cupons", "etiqueta"];
+const ABA_AFILIADOS = ["afiliados", "#/afiliados", "Afiliados", "usuarios"];
 let admin = false;
 async function conferirAdmin() {
   try {
@@ -59,7 +61,7 @@ async function conferirAdmin() {
 function mostrarBarra(abaAtiva, pendentes) {
   barra.hidden = false;
   document.body.classList.add("com-abas");
-  trocar(abas, (admin ? [...ABAS, ABA_CUPONS] : ABAS).map(([id, href, texto, ic]) =>
+  trocar(abas, (admin ? [...ABAS, ABA_CUPONS, ABA_AFILIADOS] : ABAS).map(([id, href, texto, ic]) =>
     h("a", { href, "aria-current": id === abaAtiva ? "page" : null }, icone(ic), h("span", {}, texto),
       id === "aprovacoes" && pendentes > 0 ? h("span", { class: "contador", "aria-label": `${pendentes} pendentes` }, String(pendentes)) : null)));
   trocar(barraAcoes,
@@ -103,11 +105,11 @@ function telaEntrada(...conteudo) {
     ...conteudo)));
 }
 
-function botaoGoogle(manter, convite = false) {
+function botaoGoogle(manter, convite = false, indicacao = () => indicacaoGuardada()) {
   const b = botao(convite ? "Continuar com o Google" : "Entrar com o Google", (ev) => comCarregando(ev.currentTarget, async () => {
     try {
       sessionStorage.setItem(CHAVE_MANTER, manter() ? "1" : "0");
-      const { authUrl } = await auth.iniciarGoogle(RETORNO_GOOGLE, await novoDesafioGoogle(), convite);
+      const { authUrl } = await auth.iniciarGoogle(RETORNO_GOOGLE, await novoDesafioGoogle(), convite, convite ? "" : indicacao());
       if (!/^https:\/\/accounts\.google\.com\//.test(authUrl)) throw new Error("Endereço de login inesperado.");
       location.assign(authUrl);
       await new Promise(() => {}); // segura o "Aguarde..." até o navegador sair da página
@@ -229,10 +231,11 @@ function telaCriarConta() {
   const nome = h("input", { type: "text", autocomplete: "name", placeholder: "Como você se chama", maxlength: 100 });
   const email = h("input", { type: "email", autocomplete: "username", placeholder: "seu@email.com" });
   const senha = h("input", { type: "password", autocomplete: "new-password", placeholder: "Mínimo 8 caracteres" });
+  const indicacao = h("input", { type: "text", placeholder: "Se alguém indicou o Conquistou", maxlength: 30, autocomplete: "off", value: indicacaoGuardada(), style: { textTransform: "uppercase" } });
   const aceite = h("input", { type: "checkbox" });
   const erro = h("p", { class: "erro", role: "alert", hidden: true });
   const form = h("form", { novalidate: true },
-    campo("Nome da família", familia), campo("Seu nome", nome), campo("E-mail", email), campo("Senha", senha),
+    campo("Nome da família", familia), campo("Seu nome", nome), campo("E-mail", email), campo("Senha", senha), campo("Código de indicação (opcional)", indicacao),
     h("label", { class: "marcar" }, aceite, h("span", {}, "Li e aceito os ",
       h("a", { href: "../termos.html", target: "_blank", rel: "noopener" }, "Termos de Uso"), " e a ",
       h("a", { href: "../privacidade.html", target: "_blank", rel: "noopener" }, "Política de Privacidade"),
@@ -247,7 +250,7 @@ function telaCriarConta() {
     if (!aceite.checked) return falhar("Para criar a conta, aceite os Termos de Uso e a Política de Privacidade.");
     comCarregando(form.querySelector("[type=submit]"), async () => {
       try {
-        const resultado = await auth.registrar({ nomeFamilia: familia.value.trim(), nomeResponsavel: nome.value.trim(), email: email.value.trim(), senha: senha.value, aceitouTermos: true });
+        const resultado = await auth.registrar({ nomeFamilia: familia.value.trim(), nomeResponsavel: nome.value.trim(), email: email.value.trim(), senha: senha.value, aceitouTermos: true, codigoIndicacao: indicacao.value.trim() || undefined });
         await concluirLogin(resultado, false);
       } catch (e) {
         falhar(mensagemDeErro(e, "Não foi possível criar a conta."));
@@ -255,6 +258,7 @@ function telaCriarConta() {
     });
   });
   telaEntrada(h("h1", {}, "Criar conta"), h("p", { class: "subtitulo" }, "Uma conta para a família toda."), form,
+    h("div", { class: "divisor", style: { margin: "16px 0" } }, "ou"), botaoGoogle(() => false, false, () => indicacao.value.trim()),
     h("p", { class: "rodape-entrada" }, "Já tem conta? ", h("a", { href: "#/entrar" }, "Entrar")));
   familia.focus();
 }
@@ -388,6 +392,10 @@ async function iniciar() {
 
   // Volta do login com Google: /painel/?handoff=... (código de uso único, vale 2 minutos)
   const consulta = new URLSearchParams(location.search);
+  if (consulta.get("ref")) {
+    guardarIndicacao(consulta.get("ref"));
+    history.replaceState(null, "", location.pathname + location.hash);
+  }
   const erroGoogle = consulta.get("erro");
   if (erroGoogle) {
     history.replaceState(null, "", location.pathname + "#/entrar-na-familia"); // tira o motivo do endereço

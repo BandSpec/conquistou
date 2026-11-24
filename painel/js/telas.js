@@ -1342,6 +1342,83 @@ export function telaCupons(main) {
 }
 
 // ======================================================================
+// AFILIADOS (só o administrador)
+// ======================================================================
+const LINK_AFILIADO = (codigo) => "https://conquistou.com.br/?ref=" + codigo;
+
+export function telaAfiliados(main) {
+  carregar(main, api.afiliados, (lista) => {
+    const linha = (a) => {
+      const alternar = botao(a.ativo ? "Desativar" : "Ativar", (ev) => comCarregando(ev.currentTarget, async () => {
+        try {
+          const novo = await api.definirAfiliadoAtivo(a.id, !a.ativo);
+          avisar("Afiliado " + novo.nome + (novo.ativo ? " ativado." : " desativado."));
+          telaAfiliados(main);
+        } catch (e) {
+          avisar(mensagemDeErro(e), { erro: true });
+        }
+      }), { classe: "pequeno " + (a.ativo ? "perigo" : "") });
+      const copiar = botao("Copiar link", async (ev) => {
+        try {
+          await navigator.clipboard.writeText(LINK_AFILIADO(a.codigo));
+          avisar("Link copiado: " + LINK_AFILIADO(a.codigo));
+        } catch {
+          avisar(LINK_AFILIADO(a.codigo));
+        }
+      }, { classe: "secundario pequeno", iconeNome: "copiar" });
+      return h("div", { class: "cartao " + (a.ativo ? "" : "inativo") },
+        h("div", { class: "item" },
+          h("div", { class: "texto" },
+            h("div", { class: "titulo-item" }, a.nome + " · " + a.codigo),
+            h("div", { class: "meta" },
+              a.familias + " " + (a.familias === 1 ? "família indicada" : "famílias indicadas") + " · " + a.assinantes + " " + (a.assinantes === 1 ? "assinante" : "assinantes") +
+              " · comissão de " + a.percentualComissao + "% por " + a.mesesComissao + " meses" + (a.email ? " · " + a.email : ""))),
+          h("span", { class: "pilula " + (a.ativo ? "sucesso" : "") }, a.ativo ? "Ativo" : "Desativado"), copiar, alternar));
+    };
+
+    const codigo = h("input", { type: "text", placeholder: "ex: MARIA10", maxlength: 30, autocomplete: "off", style: { textTransform: "uppercase" } });
+    const nome = h("input", { type: "text", placeholder: "Nome do afiliado", maxlength: 120 });
+    const email = h("input", { type: "email", placeholder: "e-mail (opcional)", maxlength: 256 });
+    const percentual = h("input", { type: "number", min: 0, max: 100, step: 0.5, value: 30 });
+    const meses = h("input", { type: "number", min: 1, max: 60, step: 1, value: 12 });
+    const erro = erroForm();
+    const form = h("form", { class: "cartao", novalidate: true, style: { marginTop: "16px" } },
+      h("div", { class: "titulo-item" }, "Novo afiliado"),
+      h("div", { class: "dupla", style: { marginTop: "12px" } }, campo("Código", codigo), campo("Nome", nome)),
+      campo("E-mail (opcional)", email, "O e-mail do afiliado não conta como indicação se ele mesmo criar uma conta."),
+      h("div", { class: "dupla", style: { marginTop: "12px" } }, campo("Comissão (%)", percentual), campo("Por quantos meses", meses)),
+      h("small", { class: "dica" }, "A comissão é sobre o valor líquido de cada pagamento da família indicada (a conta dos pagamentos vem na próxima fase)."),
+      erro,
+      botao("Criar afiliado", null, { tipo: "submit" }));
+    form.addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const texto = codigo.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      const pct = Number(percentual.value);
+      const m = Number(meses.value);
+      if (!/^[A-Z0-9]{3,30}$/.test(texto)) return mostrarErro(erro, "O código tem de ter de 3 a 30 letras ou números, sem espaço.");
+      if (!nome.value.trim()) return mostrarErro(erro, "Informe o nome do afiliado.");
+      if (!(pct >= 0 && pct <= 100)) return mostrarErro(erro, "A comissão vai de 0% a 100%.");
+      if (!(Number.isInteger(m) && m >= 1 && m <= 60)) return mostrarErro(erro, "A comissão vale de 1 a 60 meses.");
+      mostrarErro(erro, null);
+      comCarregando(enviador(ev), async () => {
+        try {
+          await api.criarAfiliado({ codigo: texto, nome: nome.value.trim(), email: email.value.trim() || null, percentualComissao: pct, mesesComissao: m });
+          avisar("Afiliado " + texto + " criado.");
+          telaAfiliados(main);
+        } catch (e) {
+          mostrarErro(erro, mensagemDeErro(e, "Não foi possível criar o afiliado."));
+        }
+      });
+    });
+
+    trocar(main, h("div", { class: "estreito" },
+      cabecalho("Afiliados", "Quem indica o Conquistou. O link de divulgação é conquistou.com.br/?ref=CÓDIGO."),
+      lista.length === 0 ? cartaoVazio("Nenhum afiliado ainda.") : h("div", { class: "pilha" }, lista.map(linha)),
+      form));
+  });
+}
+
+// ======================================================================
 // RESPONSÁVEIS DA FAMÍLIA (pai e mãe) e AJUDA
 // ======================================================================
 const validadeDoConvite = (iso) => {
