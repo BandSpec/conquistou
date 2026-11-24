@@ -61,6 +61,7 @@ const CAMINHOS = {
   link: '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
   direita: '<path d="m9 18 6-6-6-6"/>',
+  ajuda: '<circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01"/>',
   musica: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
 };
 
@@ -256,6 +257,7 @@ export function segmentos(opcoes, valorInicial, aoMudar, rotulo) {
         }, texto)
       )
     );
+  grupo.escolher = (v) => { valor = v; desenhar(); }; // muda a escolha por fora (ex.: uma sugestão pronta)
   desenhar();
   return grupo;
 }

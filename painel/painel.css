@@ -306,4 +306,30 @@ dialog::backdrop { background: var(--fundo-modal); }
 .lista-links svg { width: 18px; height: 18px; color: var(--indigo-txt); }
 .lista-links .perigo, .lista-links .perigo svg { color: var(--danger-txt); }
 
+/* ---------- criar tarefa em 3 blocos, resumo, foto no topo e ajuda (v3.8) ---------- */
+.botao-redondo.foto-perfil { padding: 0; overflow: hidden; border-radius: 50%; }
+.botao-redondo.foto-perfil .avatar { width: 100%; height: 100%; border-radius: 50%; }
+.foto-saudacao { display: inline-flex; border-radius: 50%; flex: none; }
+.foto-saudacao .avatar { border-radius: 50%; }
+.secao-form { font-size: 0.8rem; font-weight: 800; letter-spacing: 0.08em; color: var(--faint); margin: 10px 0 0; text-transform: uppercase; }
+.secao-form:first-child { margin-top: 0; }
+.sugestoes { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.sugestoes .chip { flex: none; display: inline-flex; align-items: center; gap: 6px; }
+.sugestoes .chip img { width: 20px; height: 20px; object-fit: contain; }
+.mais-opcoes { margin-top: 14px; }
+.mais-opcoes summary { cursor: pointer; font-weight: 800; color: var(--indigo-txt); padding: 6px 0; }
+.mais-opcoes .campo-mais { margin-top: 8px; }
+.resumo-tarefa { display: flex; gap: 10px; align-items: flex-start; background: var(--indigo-soft); border-radius: 16px; padding: 12px 14px; margin-top: 16px; }
+.resumo-tarefa svg { width: 18px; height: 18px; flex: none; margin-top: 2px; color: var(--indigo-txt); }
+.resumo-tarefa .texto-resumo { margin: 0; font-weight: 600; line-height: 1.45; }
+.ajuda-topico { padding: 0; overflow: hidden; }
+.ajuda-cabeca, .ajuda-pergunta-cabeca { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; cursor: pointer; text-align: left; color: var(--ink); }
+.ajuda-cabeca { padding: 14px 16px; font-weight: 800; font-size: 1rem; }
+.ajuda-pergunta { border-top: 1px solid var(--borda); }
+.ajuda-pergunta-cabeca { padding: 13px 16px; font-weight: 700; font-size: 0.95rem; }
+.ajuda-cabeca svg, .ajuda-pergunta-cabeca svg { width: 16px; height: 16px; color: var(--indigo-txt); flex: none; }
+.ajuda-passos { padding: 0 16px 16px; }
+.ajuda-passos ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; line-height: 1.5; }
+.ajuda-dica { display: flex; gap: 8px; align-items: flex-start; background: var(--indigo-soft); border-radius: 14px; padding: 10px 12px; margin: 12px 0 0; font-size: 0.9rem; }
+.ajuda-dica svg { width: 16px; height: 16px; flex: none; margin-top: 3px; color: var(--indigo-txt); }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
